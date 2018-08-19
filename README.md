@@ -17,10 +17,9 @@ USB keyboard as feedback fro button presses?
 
 Project setup
 
-Install Code Composer 8 and later
-Install MSP430Ware Driver Libraries
-Import Empty_Project_MSP430F5xx_6xx_Grlib_Example Project in the Graphics Driver library. 
-Rename to fit-statUSB2 
-Setup Project Configuration to your board(MSP430F5529/28)
-
-Copy git project files to the directory overwriting the existing files.
+Install Code Composer 8 and later<br>
+Install MSP430Ware Driver Libraries<br>
+Import Empty_Project_MSP430F5xx_6xx_Grlib_Example Project in the Graphics Driver library.<br> 
+Rename to fit-statUSB2<br>
+Setup Project Configuration to your board(MSP430F5529/28)<br>
+Copy git project files to the directory overwriting the existing files.<br>
