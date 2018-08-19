@@ -82,18 +82,13 @@ void main(void)
     ssd1306_dim(0xFF);
     uint8_t i = 0;
     ssd1306_startscrollright(0x00,0x0F);
-
+    ssd1306_invertDisplay(1);
     __delay_cycles(5000000);
     ssd1306_dim(0xAA);
     ssd1306_startscrollleft(0x00,0x0F);
 
-    for (i = 0 ; i < 0xFF ; i++) {
-        __delay_cycles(50000);
-        ssd1306_invertDisplay(1);
-        __delay_cycles(50000);
-        ssd1306_invertDisplay(0);
-    }
     __delay_cycles(5000000);
+
 
     ssd1306_stopscroll();
     //   clearDisplay();
@@ -108,7 +103,14 @@ void main(void)
     ssd1306_dim(0x00);
 
 
-   ssd1306_invertDisplay(0);
+
+    ssd1306_invertDisplay(0);
+
+    ssd1306_drawPixel(0,0,1);
+    ssd1306_drawPixel(125,50,1);
+    ssd1306_drawPixel(128,64,1);
+
+    ssd1306_display(buffer);
     //    ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel
     //    Template_DriverInit();
     //Enter LPM0 with interrupts enabled
