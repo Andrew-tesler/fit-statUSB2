@@ -23,3 +23,8 @@ Import Empty_Project_MSP430F5xx_6xx_Grlib_Example Project in the Graphics Driver
 Rename to fit-statUSB2<br>
 Setup Project Configuration to your board(MSP430F5529/28)<br>
 Copy git project files to the directory overwriting the existing files.<br>
+
+Import C1_LedOnOff Project 
+
+-- Add to project Properaties/ Include options / ${PROJECT_ROOT}/USB_config
+-- Copy to project librarys of USB...
