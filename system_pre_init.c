@@ -61,34 +61,34 @@ int16_t _system_pre_init(void)
 {
     /* Insert your low-level initializations here */
 
-    /* Disable Watchdog timer to prevent reset during */
+//    /* Disable Watchdog timer to prevent reset during */
     WDT_A_hold(WDT_A_BASE);
-
-    //Assign I2C pins to USCI_B0
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-            GPIO_PORT_P3,
-            GPIO_PIN0 + GPIO_PIN1
-    );
-
-    //Initialize Master
-    USCI_B_I2C_initMasterParam param = {0};
-    param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;
-    param.i2cClk = UCS_getSMCLK();
-    param.dataRate = USCI_B_I2C_SET_DATA_RATE_400KBPS;
-    USCI_B_I2C_initMaster(USCI_B0_BASE, &param);
-
-    //Specify slave address
-    USCI_B_I2C_setSlaveAddress(USCI_B0_BASE,
-                               SLAVE_ADDRESS
-    );
-
-    //Set Transmit mode
-    USCI_B_I2C_setMode(USCI_B0_BASE,
-                       USCI_B_I2C_TRANSMIT_MODE
-    );
-
-    //Enable I2C Module to start operations
-    USCI_B_I2C_enable(USCI_B0_BASE);
+//
+//    //Assign I2C pins to USCI_B0
+//    GPIO_setAsPeripheralModuleFunctionInputPin(
+//            GPIO_PORT_P3,
+//            GPIO_PIN0 + GPIO_PIN1
+//    );
+//
+//    //Initialize Master
+//    USCI_B_I2C_initMasterParam param = {0};
+//    param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;
+//    param.i2cClk = UCS_getSMCLK();
+//    param.dataRate = USCI_B_I2C_SET_DATA_RATE_400KBPS;
+//    USCI_B_I2C_initMaster(USCI_B0_BASE, &param);
+//
+//    //Specify slave address
+//    USCI_B_I2C_setSlaveAddress(USCI_B0_BASE,
+//                               SLAVE_ADDRESS
+//    );
+//
+//    //Set Transmit mode
+//    USCI_B_I2C_setMode(USCI_B0_BASE,
+//                       USCI_B_I2C_TRANSMIT_MODE
+//    );
+//
+//    //Enable I2C Module to start operations
+//    USCI_B_I2C_enable(USCI_B0_BASE);
 
     /*==================================*/
     /* Choose if segment initialization */
