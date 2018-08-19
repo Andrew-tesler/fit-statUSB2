@@ -1,2 +1,12 @@
 .*
 !.gitignore
+
+*.cmd
+
+targetConfigs/
+
+GrLib/
+
+driverlib/
+
+Debug/
