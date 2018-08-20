@@ -22,3 +22,7 @@ LcdDriver/HAL_MSP_EXP430F5529_DOGS102X64_UC1701\.h
 images/LPRocket_96x37\.c
 
 images/TI_Logo_69x64\.c
+
+USB_app/
+
+USB_API/
