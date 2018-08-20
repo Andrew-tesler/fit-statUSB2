@@ -205,6 +205,8 @@ void main(void)
                     // Compare to string #1, and respond
                     if (!(strcmp(wholeString, "LED ON"))){
 
+                        ssd1306_startscrollleft(0x00,0x0F);
+
                         // Turn off timer; no longer toggling LED
                         Timer_A_stop(TIMER_A0_BASE);
 
@@ -220,6 +222,7 @@ void main(void)
 
                         // Compare to string #2, and respond
                     } else if (!(strcmp(wholeString, "LED OFF"))){
+                        ssd1306_stopscroll();
 
                         // Turn off timer; no longer toggling LED
                         Timer_A_stop(TIMER_A0_BASE);
