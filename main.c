@@ -30,6 +30,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
 #include <defines.c>
+#include <initBoard.h>
 #include <Lcd_Driver/ssd1306_Driver.h>
 #include <msp430.h>
 #include "grlib.h"
@@ -49,7 +50,6 @@
  * NOTE: Modify hal.h to select a specific evaluation board and customize for
  * your own board.
  */
-#include "hal.h"
 
 // Function declarations
 uint8_t retInString (char* string);
