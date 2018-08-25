@@ -46,6 +46,8 @@
 #include "USB_API/USB_CDC_API/UsbCdc.h"
 #include "USB_app/usbConstructs.h"
 
+#include "usbLed.h"                                                                                     // Help functions for the LED's
+
 /*
  * NOTE: Modify hal.h to select a specific evaluation board and customize for
  * your own board.
