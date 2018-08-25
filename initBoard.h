@@ -30,7 +30,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
 /*
- * ======== hal.h ========
+ * ======== initBoard.h ========
  *
  * Device and board specific pins need to be configured here
  *
@@ -38,21 +38,9 @@
 
 #include "driverlib.h"
 
-#define LED_PORT	GPIO_PORT_P1
-#define LED_PIN		GPIO_PIN0
-
-/*----------------------------------------------------------------------------
- * The following function names are deprecated.  These were updated to new 
- * names to follow OneMCU naming convention.
- +---------------------------------------------------------------------------*/
-
-#ifndef DEPRECATED
-#define   initPorts       USBHAL_initPorts
-#define   initClocks      USBHAL_initClocks
-#endif
-
 
 void USBHAL_initPorts(void);
 void USBHAL_initClocks(uint32_t mclkFreq);
+void initI2C(void);
 
-//Released_Version_5_20_06_02
+

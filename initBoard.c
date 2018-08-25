@@ -43,19 +43,14 @@
 #include "USB_config/descriptors.h"
 
 
-#define GPIO_ALL	GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
-					GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
-
-
-
 /*
-* This function drives all the I/O's as output-low, to avoid floating inputs
-* (which cause extra power to be consumed).  This setting is compatible with  
+ * This function drives all the I/O's as output-low, to avoid floating inputs
+ * (which cause extra power to be consumed).  This setting is compatible with
  * TI FET target boards, the F5529 Launchpad, and F5529 Experimenters Board;  
  * but may not be compatible with custom hardware, which may have components  
  * attached to the I/Os that could be affected by these settings.  So if using
-* other boards, this function may need to be modified.
-*/
+ * other boards, this function may need to be modified.
+ */
 void USBHAL_initPorts(void)
 {
 #ifdef __MSP430_HAS_PORT1_R__
@@ -109,59 +104,64 @@ void USBHAL_initPorts(void)
 #endif
 
 
-    //Assign I2C pins to USCI_B0
-      GPIO_setAsPeripheralModuleFunctionInputPin(
-              GPIO_PORT_P3,
-              GPIO_PIN0 + GPIO_PIN1
-      );
-
-      //Initialize Master
-      USCI_B_I2C_initMasterParam param = {0};
-      param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;
-      param.i2cClk = UCS_getSMCLK();
-      param.dataRate = USCI_B_I2C_SET_DATA_RATE_100KBPS;
-      USCI_B_I2C_initMaster(USCI_B0_BASE, &param);
-
-      //Specify slave address
-      USCI_B_I2C_setSlaveAddress(USCI_B0_BASE,
-                                 SLAVE_ADDRESS
-      );
-
-      //Set Transmit mode
-      USCI_B_I2C_setMode(USCI_B0_BASE,
-                         USCI_B_I2C_TRANSMIT_MODE
-      );
-
-      //Enable I2C Module to start operations
-      USCI_B_I2C_enable(USCI_B0_BASE);
+    /* Configures the system clocks:
+     * MCLK = SMCLK = DCO/FLL = mclkFreq (expected to be expressed in Hz)
+     * ACLK = FLLref = REFO=32kHz
+     *
+     * XT2 is not configured here.  Instead, the USB API automatically starts XT2
+     * when beginning USB communication, and optionally disables it during USB
+     * suspend.  It's left running after the USB host is disconnected, at which
+     * point you're free to disable it.  You need to configure the XT2 frequency
+     * in the Descriptor Tool (currently set to 4MHz in this example).
+     * See the Programmer's Guide for more information.
+     */
 }
-
-/* Configures the system clocks:
-* MCLK = SMCLK = DCO/FLL = mclkFreq (expected to be expressed in Hz)
-* ACLK = FLLref = REFO=32kHz
-*
-* XT2 is not configured here.  Instead, the USB API automatically starts XT2
-* when beginning USB communication, and optionally disables it during USB
-* suspend.  It's left running after the USB host is disconnected, at which
-* point you're free to disable it.  You need to configure the XT2 frequency
-* in the Descriptor Tool (currently set to 4MHz in this example).
-* See the Programmer's Guide for more information.
-*/
 void USBHAL_initClocks(uint32_t mclkFreq)
 {
-	UCS_initClockSignal(
-	   UCS_FLLREF,
-	   UCS_REFOCLK_SELECT,
-	   UCS_CLOCK_DIVIDER_1);
+    UCS_initClockSignal(
+            UCS_FLLREF,
+            UCS_REFOCLK_SELECT,
+            UCS_CLOCK_DIVIDER_1);
 
-	UCS_initClockSignal(
-	   UCS_ACLK,
-	   UCS_REFOCLK_SELECT,
-	   UCS_CLOCK_DIVIDER_1);
+    UCS_initClockSignal(
+            UCS_ACLK,
+            UCS_REFOCLK_SELECT,
+            UCS_CLOCK_DIVIDER_1);
 
     UCS_initFLLSettle(
-        mclkFreq/1000,
-        mclkFreq/32768);
+            mclkFreq/1000,
+            mclkFreq/32768);
 
 }
-//Released_Version_5_20_06_02
+
+/*
+ * Init I2C device for the LCD device
+ */
+void initI2C() {
+    //Assign I2C pins to USCI_B0
+    GPIO_setAsPeripheralModuleFunctionInputPin(
+            GPIO_PORT_P3,
+            GPIO_PIN0 + GPIO_PIN1
+    );
+
+    //Initialize Master
+    USCI_B_I2C_initMasterParam param = {0};
+    param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;
+    param.i2cClk = UCS_getSMCLK();
+    param.dataRate = USCI_B_I2C_SET_DATA_RATE_100KBPS;
+    USCI_B_I2C_initMaster(USCI_B0_BASE, &param);
+
+    //Specify slave address
+    USCI_B_I2C_setSlaveAddress(USCI_B0_BASE,
+                               SLAVE_ADDRESS
+    );
+
+    //Set Transmit mode
+    USCI_B_I2C_setMode(USCI_B0_BASE,
+                       USCI_B_I2C_TRANSMIT_MODE
+    );
+
+    //Enable I2C Module to start operations
+    USCI_B_I2C_enable(USCI_B0_BASE);
+}
+
