@@ -12,7 +12,7 @@
 //#define FITSTATUSB
 
 #if defined LAUNCH_PAD && defined FITSTATUSB
-  #error "Only one HW platform can be defined"
+#error "Only one HW platform can be defined"
 #endif
 
 
@@ -51,6 +51,12 @@
 
 #define GPIO_ALL    GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
         GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
+
+// If using launch Pad define the device leds
+#ifdef LAUNCH_PAD
+    #define LED_PORT    GPIO_PORT_P1
+    #define LED_PIN     GPIO_PIN0
+#endif
 
 
 //uint8_t transmitData[40][2] = {
