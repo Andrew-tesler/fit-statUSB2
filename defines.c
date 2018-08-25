@@ -39,7 +39,18 @@
 #define WIDGETSTYLE1            1
 #define WIDGETSTYLE2            2
 
+// TODO change to the correct GPIO on the platform
+#define LED_PORT                GPIO_PORT_P1
+#define LED_G                   GPIO_PIN4
+#define LED_B                   GPIO_PIN3
+#define LED_R                   GPIO_PIN2
 
+#define MAX_FADE_DECIMAL        5                   // Maximum fade decimal numbers, If increasing size check all related value size also
+// TODO Change if can increase this number as this MCU with MUCH bigger memory size.
+#define MAX_SEQ_COLORS          20                  // Maximum Color in sequence that can accept from the user(limited by code size)
+
+#define GPIO_ALL    GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
+        GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
 
 
 //uint8_t transmitData[40][2] = {
@@ -53,17 +64,3 @@
 //
 //
 //};
-
-
-#define GPIO_ALL    GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
-        GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
-
-// TODO change to the correct GPIO on the platform
-#define LED_PORT    GPIO_PORT_P1
-#define LED_G       GPIO_PIN4
-#define LED_B       GPIO_PIN3
-#define LED_R       GPIO_PIN2
-
-#define MAX_FADE_DECIMAL 5                                                                              // Maximum fade decimal numbers, If increasing size check all related value size also
-#define MAX_SEQ_COLORS   20
-
