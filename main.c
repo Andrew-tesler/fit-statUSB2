@@ -333,53 +333,53 @@ void main(void)
 
 
 
-//******************************************************************************
+////******************************************************************************
+////
+////This is the USCI_B0 interrupt vector service routine.
+////
+////******************************************************************************
+//#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+//#pragma vector=USCI_B0_VECTOR
+//__interrupt
+//#elif defined(__GNUC__)
+//__attribute__((interrupt(USCI_B0_VECTOR)))
+//#endif
+//void USCI_B0_ISR (void)
+//{
+//    switch (__even_in_range(UCB0IV,12)){
+//    case USCI_I2C_UCTXIFG:
+//    {
 //
-//This is the USCI_B0 interrupt vector service routine.
+//        //Check TX byte counter
+//        if (transmitCounter < 7){
+//            //Initiate send of character from Master to Slave
+//            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,
+//                                               transmitData[transmitCounter][0]
+//            );
 //
-//******************************************************************************
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=USCI_B0_VECTOR
-__interrupt
-#elif defined(__GNUC__)
-__attribute__((interrupt(USCI_B0_VECTOR)))
-#endif
-void USCI_B0_ISR (void)
-{
-    switch (__even_in_range(UCB0IV,12)){
-    case USCI_I2C_UCTXIFG:
-    {
-
-        //Check TX byte counter
-        if (transmitCounter < 7){
-            //Initiate send of character from Master to Slave
-            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,
-                                               transmitData[transmitCounter][0]
-            );
-
-            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,
-                                               transmitData[transmitCounter][1]
-            );
-
-            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-
-            //Increment TX byte counter
-            transmitCounter++;
-        } else   {
-            //Initiate stop only
-            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-
-            //Clear master interrupt status
-            USCI_B_I2C_clearInterrupt(USCI_B0_BASE,
-                                      USCI_B_I2C_TRANSMIT_INTERRUPT);
-
-            //Exit LPM0 on interrupt return
-            __bic_SR_register_on_exit(LPM0_bits);
-        }
-        break;
-    }
-    }
-}
+//            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,
+//                                               transmitData[transmitCounter][1]
+//            );
+//
+//            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+//
+//            //Increment TX byte counter
+//            transmitCounter++;
+//        } else   {
+//            //Initiate stop only
+//            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+//
+//            //Clear master interrupt status
+//            USCI_B_I2C_clearInterrupt(USCI_B0_BASE,
+//                                      USCI_B_I2C_TRANSMIT_INTERRUPT);
+//
+//            //Exit LPM0 on interrupt return
+//            __bic_SR_register_on_exit(LPM0_bits);
+//        }
+//        break;
+//    }
+//    }
+//}
 
 /*
  * ======== UNMI_ISR ========
