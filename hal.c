@@ -33,11 +33,10 @@
  * ======== hal.c ========
  *
  */
+#include <defines.c>
 #include "msp430.h"
 
 #include "driverlib.h"
-
-#include "globals.h"
 
 #include "USB_API/USB_Common/device.h"
 #include "USB_config/descriptors.h"

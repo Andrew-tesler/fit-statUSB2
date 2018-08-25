@@ -29,19 +29,12 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
+#include <defines.c>
 #include <Lcd_Driver/ssd1306_Driver.h>
 #include <msp430.h>
 #include "grlib.h"
 #include "images/images.h"
 #include "driverlib.h"
-#include "globals.h"
-
-/*
- * USB Add
- *
- *
- */
-
 #include <string.h>
 
 #include "driverlib.h"

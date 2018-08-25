@@ -51,11 +51,11 @@
  * segment initialization.
  */
 
+#include <defines.c>
 #include <intrinsics.h>
 #include "stdint.h"
 #include "msp430.h"
 #include "driverlib.h"
-#include "globals.h"
 
 int16_t _system_pre_init(void)
 {

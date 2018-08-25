@@ -80,11 +80,11 @@
 // Include Files
 //
 //*****************************************************************************
+#include <defines.c>
 #include <Lcd_Driver/ssd1306_Driver.h>
 #include <msp430.h>
 #include "grlib.h"
 #include "driverlib.h"
-#include "globals.h"
 
 //*****************************************************************************
 //
