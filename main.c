@@ -38,53 +38,73 @@
 // LED related
 #include "usbLed.h"  // Help functions for the LED's
 
-//*****************************************************************************
+//*****************************************************************************************************
 //
 //  DEFINES
 //
-//*****************************************************************************
+//*****************************************************************************************************
 #define MAX_STR_LENGTH 64
+#define BUFFER_SIZE 256
+#define INFOB_START   (0x1900)
 
-//*****************************************************************************
+
+//*****************************************************************************************************
 //
 //   Function declarations
 //
-//*****************************************************************************
+//*****************************************************************************************************
+void printHelp(void);
+void converIncomingColor(void);
+
 uint8_t retInString (char* string);
+uint8_t retInString (char* string);
+uint8_t chrToHx(uint8_t);
+uint32_t parseFadeTimer(uint8_t unformated[],uint8_t fadeCounter);
+                                                                     // Convert incoming color to formated color
 Timer_A_initUpModeParam Timer_A_params = {0};     // TODO remove this
 
 
-//*****************************************************************************
+//*****************************************************************************************************
 //
 //   Parameters Initialization
 //
-//*****************************************************************************
-volatile uint8_t bCDCDataReceived_event = FALSE; // Indicates data has been rx'ed
-char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
+//*****************************************************************************************************
+//volatile uint8_t bCDCDataReceived_event = FALSE; // Indicates data has been rx'ed
+//char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
+uint8_t i;                                                                                              // General counter value
+uint8_t incomingColor[6];                                                                               // Array for incoming color data
+uint8_t formatedColor[3];                                                                               // Formated array color data
+uint8_t unformatedFade[MAX_FADE_DECIMAL] = "";                                                          // Unformatted Fade tempt storage
+uint8_t transmitCounter = 0;
+char dataBuffer[BUFFER_SIZE] = "";
+char nl[2] = "\n";
+char wholeString[MAX_STR_LENGTH] = "";                                                                  // Entire input str from last 'return'
+char pieceOfString[MAX_STR_LENGTH] = "";                                                                // Holds the new addition to the string
+char outString[MAX_STR_LENGTH] = "";                                                                    // Holds the outgoing string
+char deviceSN[12];
 
 // TODO probably can remove this values after adding the fitstatUSB code
-// Set/declare toggle delays
 uint16_t SlowToggle_Period = 20000 - 1;
 uint16_t FastToggle_Period = 1000 - 1;
 
-uint8_t transmitCounter = 0;
+uint32_t decimals;
 
-//Graphics_Context g_sContext;
-#if defined(__IAR_SYSTEMS_ICC__)
-int16_t __low_level_init(void) {
-    // Stop WDT (Watch Dog Timer)
-    WDTCTL = WDTPW + WDTHOLD;
-    return(1);
-}
+volatile uint8_t bCDCDataReceived_event = FALSE;                                                        // Flag set by event handler to indicate data has been received into USB buffer
+volatile uint16_t led;
 
-#endif
+long wholeStringCounter;
+long formated;
 
+int seqCounter = 0;
+int counterFade;
+int fadeTimeCounter;
+int n = 0;
 
-
-
-
-
-
+// https://git-server/Andrew/fit-statUSB/wikis/Internal-Flash-Mapping                                   // Compulab Wiki page for memory mapping
+// Revision information from Flash
+char *MAJOR1_ptrB = (char *)INFOB_START;                                                                // Major Revision Start
+char *MINOR1_ptrB = (char *)INFOB_START+2;                                                              // Minor Revision start
+char *SERIAL_ptrB = (char *)INFOB_START+4;                                                              // Serial Number Start
 
 
 void main(void)
