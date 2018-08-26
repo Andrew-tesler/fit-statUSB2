@@ -113,9 +113,12 @@ void main(void)
     // USB
     PMM_setVCore(PMM_CORE_LEVEL_3);
     USBHAL_initPorts();           // Config GPIOS for low-power (output low)
-    initI2C();
-    USBHAL_initClocks(8000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
 
+
+
+    USBHAL_initClocks(12000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
+
+    initI2C();
                           // Init LCD i2c
 //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect

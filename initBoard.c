@@ -42,6 +42,26 @@
 #include "USB_API/USB_Common/device.h"
 #include "USB_config/descriptors.h"
 
+#if defined LAUNCH_PAD
+    #define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                    // 32KHz
+    #define HF_CRYSTAL_FREQUENCY_IN_HZ     4000000                                  // 12MHz // Launch pad
+#endif
+
+//#define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                    // 32KHz
+//#define HF_CRYSTAL_FREQUENCY_IN_HZ     12000000                                  // 12MHz
+//#define HF_CRYSTAL_FREQUENCY_IN_HZ     4000000                                  // 12MHz // Launch pad
+
+#define MCLK_DESIRED_FREQUENCY_IN_KHZ  12000                                     // 26MHz
+#define MCLK_FLLREF_RATIO              MCLK_DESIRED_FREQUENCY_IN_KHZ / ( UCS_REFOCLK_FREQUENCY / 1024 )    // Ratio = 250
+
+
+
+//#define GPIO_ALL  GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
+//        GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
+
+uint32_t myACLK;
+uint32_t mySMCLK;
+uint32_t myMCLK;
 
 /*
  * This function drives all the I/O's as output-low, to avoid floating inputs
@@ -116,21 +136,97 @@ void USBHAL_initPorts(void)
      * See the Programmer's Guide for more information.
      */
 }
+
+
 void USBHAL_initClocks(uint32_t mclkFreq)
 {
+
+#if defined LAUNCH_PAD
+    // Defined Clocks
+#else
+    #error "Validate clock and add if statement"
+#endif
+
+    myACLK = UCS_getACLK();
+    mySMCLK =  UCS_getSMCLK();
+    myMCLK = UCS_getMCLK();
+
+    __no_operation();
+
+    // Crystal Alternative function pins
+    GPIO_setAsPeripheralModuleFunctionInputPin(
+            GPIO_PORT_P5,                                // XIN  on P5.4
+            GPIO_PIN3 +                                  // XT2OUT on P5.3
+            GPIO_PIN2                                    // XT2IN  on P5.2
+    );
+
+    GPIO_setAsPeripheralModuleFunctionInputPin(
+            GPIO_PORT_P5,
+            GPIO_PIN4 +                                  // XIN on P5.4
+            GPIO_PIN5                                    // XOUT  on P5.5
+    );
+
+
+    //       PMM_setVCore( PMM_CORE_LEVEL_3 );
+
+    UCS_turnOnXT2( UCS_XT2_DRIVE_8MHZ_16MHZ );
+
+    UCS_turnOnLFXT1(UCS_XCAP_0,UCS_XT1_DRIVE_0);
+
+    UCS_setExternalClockSource(
+            LF_CRYSTAL_FREQUENCY_IN_HZ,                                         // XT1CLK input
+            HF_CRYSTAL_FREQUENCY_IN_HZ                                          // XT2CLK input
+    );
+
+
+
     UCS_initClockSignal(
             UCS_FLLREF,
             UCS_REFOCLK_SELECT,
             UCS_CLOCK_DIVIDER_1);
 
+    // Select XT2 as oscillator source for SMCLK
+    UCS_initClockSignal(
+            UCS_SMCLK,                                   // Clock you're configuring
+            UCS_XT2CLK_SELECT,                           // Clock source
+            UCS_CLOCK_DIVIDER_2                          // Divide down clock source by this much
+    );
+
+    UCS_initClockSignal(
+            UCS_MCLK,
+            UCS_XT2CLK_SELECT,
+            UCS_CLOCK_DIVIDER_1
+    );
+
+
     UCS_initClockSignal(
             UCS_ACLK,
-            UCS_REFOCLK_SELECT,
+            UCS_XT1CLK_SELECT,
             UCS_CLOCK_DIVIDER_1);
 
-    UCS_initFLLSettle(
-            mclkFreq/1000,
-            mclkFreq/32768);
+    //       UCS_initFLLSettle(
+    //               mclkFreq/1000,
+    //               mclkFreq/32768);
+
+
+    myACLK = UCS_getACLK();
+    mySMCLK =  UCS_getSMCLK();
+    myMCLK = UCS_getMCLK();
+
+    __no_operation();
+    //    UCS_initClockSignal(
+    //            UCS_FLLREF,
+    //            UCS_REFOCLK_SELECT,
+    //            UCS_CLOCK_DIVIDER_1);
+    //
+    //    UCS_initClockSignal(
+    //            UCS_ACLK,
+    //            UCS_REFOCLK_SELECT,
+    //            UCS_CLOCK_DIVIDER_1);
+    //
+    //    UCS_initFLLSettle(
+    //            mclkFreq/1000,
+    //            mclkFreq/32768);
 
 }
 
@@ -148,7 +244,7 @@ void initI2C() {
     USCI_B_I2C_initMasterParam param = {0};
     param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;
     param.i2cClk = UCS_getSMCLK();
-    param.dataRate = USCI_B_I2C_SET_DATA_RATE_100KBPS;
+    param.dataRate = USCI_B_I2C_SET_DATA_RATE_400KBPS;
     USCI_B_I2C_initMaster(USCI_B0_BASE, &param);
 
     //Specify slave address
