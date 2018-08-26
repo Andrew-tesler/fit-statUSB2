@@ -67,7 +67,7 @@ void initTimers(int red,int green,int blue) {
     Timer_A_initUpModeParam initParam2 = {0};
     //
     initParam2.clockSource              = TIMER_A_CLOCKSOURCE_SMCLK;
-    initParam2.clockSourceDivider       = TIMER_A_CLOCKSOURCE_DIVIDER_24;
+    initParam2.clockSourceDivider       = TIMER_A_CLOCKSOURCE_DIVIDER_6;
     initParam2.timerInterruptEnable_TAIE = TIMER_A_TAIE_INTERRUPT_DISABLE;
     initParam2.captureCompareInterruptEnable_CCR0_CCIE  = TIMER_A_CCIE_CCR0_INTERRUPT_DISABLE;
     initParam2.timerPeriod              = 0xFF;
@@ -138,7 +138,7 @@ void initfadeClock() {
     Timer_B_initUpModeParam initTimer_b = {0};
     //    0xDCD;
     initTimer_b.clockSource                             = TIMER_B_CLOCKSOURCE_SMCLK;
-    initTimer_b.clockSourceDivider                      = TIMER_B_CLOCKSOURCE_DIVIDER_7;
+    initTimer_b.clockSourceDivider                      = TIMER_B_CLOCKSOURCE_DIVIDER_2;
     initTimer_b.timerPeriod                             = 0xDCD;
     initTimer_b.timerInterruptEnable_TBIE               = TIMER_B_TBIE_INTERRUPT_DISABLE;
     initTimer_b.captureCompareInterruptEnable_CCR0_CCIE = TIMER_B_CCIE_CCR0_INTERRUPT_ENABLE;
