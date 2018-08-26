@@ -41,9 +41,9 @@
 
 // TODO change to the correct GPIO on the platform
 #define LED_PORT                GPIO_PORT_P1
-#define LED_G                   GPIO_PIN4
+#define LED_G                   GPIO_PIN2
 #define LED_B                   GPIO_PIN3
-#define LED_R                   GPIO_PIN2
+#define LED_R                   GPIO_PIN4
 
 #define MAX_FADE_DECIMAL        5                   // Maximum fade decimal numbers, If increasing size check all related value size also
 // TODO Change if can increase this number as this MCU with MUCH bigger memory size.
@@ -54,8 +54,8 @@
 
 // If using launch Pad define the device leds
 #ifdef LAUNCH_PAD
-    #define LED_PORT    GPIO_PORT_P1
-    #define LED_PIN     GPIO_PIN0
+    #define LED_PORT_BOARD     GPIO_PORT_P1
+    #define LED_PIN            GPIO_PIN0
 #endif
 
 

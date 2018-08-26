@@ -41,19 +41,19 @@ void initTimers(int red,int green,int blue) {
         Red = red;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, LED_R);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_R);
     }
     if (green > 0 & green <= 255){
         Green = green;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, LED_G);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_G);
     }
     if (blue > 0 & blue <= 255){
         Blue = blue;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, LED_B);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_B);
     }
 
     //    if (Red <= 0) {                                                             // Fix the LED red Powering ON when not in use

@@ -123,18 +123,9 @@ void USBHAL_initPorts(void)
     GPIO_setAsOutputPin(GPIO_PORT_PJ, GPIO_ALL);
 #endif
 
+    GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_ALL);
+    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_ALL);
 
-    /* Configures the system clocks:
-     * MCLK = SMCLK = DCO/FLL = mclkFreq (expected to be expressed in Hz)
-     * ACLK = FLLref = REFO=32kHz
-     *
-     * XT2 is not configured here.  Instead, the USB API automatically starts XT2
-     * when beginning USB communication, and optionally disables it during USB
-     * suspend.  It's left running after the USB host is disconnected, at which
-     * point you're free to disable it.  You need to configure the XT2 frequency
-     * in the Descriptor Tool (currently set to 4MHz in this example).
-     * See the Programmer's Guide for more information.
-     */
 }
 
 

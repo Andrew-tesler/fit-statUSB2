@@ -20,23 +20,28 @@
 
 
 // General board libraries
-#include <msp430.h>
-#include <defines.c>
-#include <initBoard.h>
-#include <string.h>
+#include <msp430.h>                                                                                     // General board file
+#include <defines.c>                                                                                    // Project globals defines
+#include <initBoard.h>                                                                                  // Ti Board specific functions
+#include <string.h>                                                                                     // String library to handle the String
+#include <stdlib.h>                                                                                     // atoi
+#include "driverlib.h"                                                                                  // Ti Driver library for MSP430 Devices
+#include "initTimers.h"                                                                                 // Timer specific functions
+
 // LCD related
-#include <Lcd_Driver/ssd1306_Driver.h>
-#include "images/images.h"
-#include "grlib.h"
-#include "driverlib.h"
+#include <Lcd_Driver/ssd1306_Driver.h>                                                                  // SSD1306 Driver
+#include "images/images.h"                                                                              // Images file for LCD driver
+#include "grlib.h"                                                                                      // TI Graphics library
+
 // USB Related
-#include "USB_config/descriptors.h"
-#include "USB_API/USB_Common/device.h"
-#include "USB_API/USB_Common/usb.h"
-#include "USB_API/USB_CDC_API/UsbCdc.h"
-#include "USB_app/usbConstructs.h"
+#include "USB_config/descriptors.h"                                                                     // USB descriptors
+#include "USB_API/USB_Common/device.h"                                                                  // Part of TI USP API library
+#include "USB_API/USB_Common/usb.h"                                                                     // Part of TI USP API library
+#include "USB_API/USB_CDC_API/UsbCdc.h"                                                                 // Part of TI USP API library USB CDC
+#include "USB_app/usbConstructs.h"                                                                      // Part of TI USP API library
 // LED related
-#include "usbLed.h"  // Help functions for the LED's
+#include "usbLed.h"                                                                                     // Help functions for the LED's
+
 
 //*****************************************************************************************************
 //
@@ -60,7 +65,7 @@ uint8_t retInString (char* string);
 uint8_t retInString (char* string);
 uint8_t chrToHx(uint8_t);
 uint32_t parseFadeTimer(uint8_t unformated[],uint8_t fadeCounter);
-                                                                     // Convert incoming color to formated color
+// Convert incoming color to formated color
 Timer_A_initUpModeParam Timer_A_params = {0};     // TODO remove this
 
 
@@ -119,73 +124,104 @@ void main(void)
     USBHAL_initClocks(12000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
 
     initI2C();
-                          // Init LCD i2c
-//    initTimer();           // Prepare timer for LED toggling
+    // Init LCD i2c
+    //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
 
     __enable_interrupt();  // Enable interrupts globally
 
     // Set up the LCD
-      Template_DriverInit();
-      ssd1306_display(logo);
-      ssd1306_startscrollright(0x00,0x0F);
+    Template_DriverInit();
+    ssd1306_display(logo);
+    ssd1306_startscrollright(0x00,0x0F);
 
-      //
-      //    ssd1306_command(0x21);
-      //    ssd1306_command(0x00);
-      //    ssd1306_command(0x7F);
-      //    ssd1306_command(0x00);
-      //    ssd1306_command(0x22);
-      //    ssd1306_command(0x00);
-      //    ssd1306_command(0x07);
+    strncat(deviceSN,(char *)SERIAL_ptrB,10);
+    strcat(deviceSN,"\r\n\r\n");
+    fadeTimer = 300;                                                                                    // Default timer 300ms
+
+    colorFadeTimer[MAX_SEQ_COLORS] = 500;                                                                // Last element initialization
+
+    for (n=0;n < MAX_SEQ_COLORS;n++) {
+        colorSeq[n][0] = 0;
+        colorSeq[n][1] = 0;
+        colorSeq[n][2] = 0;
+        colorFadeTimer[n] = 300;
+
+    }
+
+    for (n = 0 ; n < MAX_FADE_DECIMAL ; n++) {
+        unformatedFade[n] = 0x00;
+    }
+    __bis_SR_register( GIE );                                                                           // Enable interrupts globally
+
+
+    __enable_interrupt();  // Enable interrupts globally
+
+    // Gather information from the card
+    //strcpy(deviceSN,"Serial No:\t\t\t1234567890\n\r");
+    //  strcpy(deviceSN,"Device SN: 56987\t Rev.1.0\r\n\r\n");
+
+    allOff();
+    initTimers(0,10,10);
+    currentRGBColor[2] = 5;
+
+
+    //
+    //    ssd1306_command(0x21);
+    //    ssd1306_command(0x00);
+    //    ssd1306_command(0x7F);
+    //    ssd1306_command(0x00);
+    //    ssd1306_command(0x22);
+    //    ssd1306_command(0x00);
+    //    ssd1306_command(0x07);
 
 
 
 
 
-      //    ssd1306_drawPixel(1,5,1);
-      //    ssd1306_drawPixel(2,5,1);
-      //    ssd1306_drawPixel(3,5,1);
-      //    ssd1306_drawPixel(4,5,1);
-      //    ssd1306_drawPixel(5,5,1);
+    //    ssd1306_drawPixel(1,5,1);
+    //    ssd1306_drawPixel(2,5,1);
+    //    ssd1306_drawPixel(3,5,1);
+    //    ssd1306_drawPixel(4,5,1);
+    //    ssd1306_drawPixel(5,5,1);
 
 
-//      __delay_cycles(500000);
-//      ssd1306_dim(0xFF);
-//      uint8_t i = 0;
-//      ssd1306_startscrollright(0x00,0x0F);
-//      ssd1306_invertDisplay(1);
-//      __delay_cycles(5000000);
-//      ssd1306_dim(0xAA);
-//      ssd1306_startscrollleft(0x00,0x0F);
-//
-//      __delay_cycles(5000000);
-//
-//
-//      ssd1306_stopscroll();
-//      //   clearDisplay();
-//      __delay_cycles(50000);
-//
-//      ssd1306_invertDisplay(1);
-//
-//      for (i = 0 ; i < 0xFF ; i++) {
-//          ssd1306_dim(i);
-//          __delay_cycles(50000);
-//      }
-//      ssd1306_dim(0x00);
-//
-//
-//
-//      ssd1306_invertDisplay(0);
-//
-//      ssd1306_drawPixel(0,0,1);
-//      ssd1306_drawPixel(125,50,1);
-//      ssd1306_drawPixel(128,64,1);
-//
-//      ssd1306_display(buffer);
-//      //    ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel
-      //    Template_DriverInit();
-      //Enter LPM0 with interrupts enabled
+    //      __delay_cycles(500000);
+    //      ssd1306_dim(0xFF);
+    //      uint8_t i = 0;
+    //      ssd1306_startscrollright(0x00,0x0F);
+    //      ssd1306_invertDisplay(1);
+    //      __delay_cycles(5000000);
+    //      ssd1306_dim(0xAA);
+    //      ssd1306_startscrollleft(0x00,0x0F);
+    //
+    //      __delay_cycles(5000000);
+    //
+    //
+    //      ssd1306_stopscroll();
+    //      //   clearDisplay();
+    //      __delay_cycles(50000);
+    //
+    //      ssd1306_invertDisplay(1);
+    //
+    //      for (i = 0 ; i < 0xFF ; i++) {
+    //          ssd1306_dim(i);
+    //          __delay_cycles(50000);
+    //      }
+    //      ssd1306_dim(0x00);
+    //
+    //
+    //
+    //      ssd1306_invertDisplay(0);
+    //
+    //      ssd1306_drawPixel(0,0,1);
+    //      ssd1306_drawPixel(125,50,1);
+    //      ssd1306_drawPixel(128,64,1);
+    //
+    //      ssd1306_display(buffer);
+    //      //    ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel
+    //    Template_DriverInit();
+    //Enter LPM0 with interrupts enabled
 
     while (1)
     {
@@ -237,7 +273,7 @@ void main(void)
                         Timer_A_stop(TIMER_A0_BASE);
 
                         // Turn on LED P1.0
-                        GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
+                        GPIO_setOutputHighOnPin(LED_PORT_BOARD, LED_PIN);
 
                         // Prepare the outgoing string
                         strcpy(outString,"\r\nLED is ON\r\n\r\n");
@@ -254,7 +290,7 @@ void main(void)
                         Timer_A_stop(TIMER_A0_BASE);
 
                         // Turn off LED P1.0
-                        GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+                        GPIO_setOutputLowOnPin(LED_PORT_BOARD, LED_PIN);
 
                         // Prepare the outgoing string
                         strcpy(outString,"\r\nLED is OFF\r\n\r\n");
@@ -338,7 +374,7 @@ void main(void)
         case ST_PHYS_CONNECTED_NOENUM_SUSP:
 
             //Turn off LED P1.0
-            GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+            GPIO_setOutputLowOnPin(LED_PORT_BOARD, LED_PIN);
             __bis_SR_register(LPM3_bits + GIE);
             _NOP();
             break;
