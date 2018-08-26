@@ -126,6 +126,10 @@ void USBHAL_initPorts(void)
     GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_ALL);
     GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_ALL);
 
+
+    // Init GPIO alternative function directly from timer
+//    GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);// Set the RGB LED GPIO to alternative function to power the LEDS directly from timer
+
 }
 
 
