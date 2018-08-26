@@ -1,165 +1,227 @@
-/* --COPYRIGHT--,BSD
- * Copyright (c) 2016, Texas Instruments Incorporated
- * All rights reserved.
+/**********************************************************
+ * NAME: *
+ * main.c
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
+ * PURPOSE: *
+ * Main Program script
  *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * --/COPYRIGHT--*/
-#include <Lcd_Driver/ssd1306_Driver.h>
-#include <msp430.h>
-#include "grlib.h"
-#include "images/images.h"
-#include "driverlib.h"
-#include "globals.h"
+ * GLOBAL VARIABLES: *
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 26/08/2018   Andrew T.   1.0     initial Release
+ * *
+ *******************************************************************/
 
-/*
- * USB Add
- *
- *
- */
 
-#include <string.h>
+// General board libraries
+#include <msp430.h>                                                                                     // General board file
+#include <defines.c>                                                                                    // Project globals defines
+#include <initBoard.h>                                                                                  // Ti Board specific functions
+#include <string.h>                                                                                     // String library to handle the String
+#include <stdlib.h>                                                                                     // atoi
+#include "driverlib.h"                                                                                  // Ti Driver library for MSP430 Devices
+#include "initTimers.h"                                                                                 // Timer specific functions
 
-#include "driverlib.h"
+// LCD related
+#include <Lcd_Driver/ssd1306_Driver.h>                                                                  // SSD1306 Driver
+#include "images/images.h"                                                                              // Images file for LCD driver
+#include "grlib.h"                                                                                      // TI Graphics library
 
-#include "USB_config/descriptors.h"
-#include "USB_API/USB_Common/device.h"
-#include "USB_API/USB_Common/usb.h"                 // USB-specific functions
-#include "USB_API/USB_CDC_API/UsbCdc.h"
-#include "USB_app/usbConstructs.h"
+// USB Related
+#include "USB_config/descriptors.h"                                                                     // USB descriptors
+#include "USB_API/USB_Common/device.h"                                                                  // Part of TI USP API library
+#include "USB_API/USB_Common/usb.h"                                                                     // Part of TI USP API library
+#include "USB_API/USB_CDC_API/UsbCdc.h"                                                                 // Part of TI USP API library USB CDC
+#include "USB_app/usbConstructs.h"                                                                      // Part of TI USP API library
+// LED related
+#include "usbLed.h"                                                                                     // Help functions for the LED's
 
-/*
- * NOTE: Modify hal.h to select a specific evaluation board and customize for
- * your own board.
- */
-#include "hal.h"
 
-// Function declarations
-uint8_t retInString (char* string);
-void initTimer(void);
-void setTimer_A_Parameters(void);
-// Global flags set by events
-volatile uint8_t bCDCDataReceived_event = FALSE; // Indicates data has been rx'ed
-// without an open rx operation
-
+//*****************************************************************************************************
+//
+//  DEFINES
+//
+//*****************************************************************************************************
 #define MAX_STR_LENGTH 64
-char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
+#define BUFFER_SIZE 256
+#define INFOB_START   (0x1900)
 
-// Set/declare toggle delays
+
+//*****************************************************************************************************
+//
+//   Function declarations
+//
+//*****************************************************************************************************
+void printHelp(void);
+void converIncomingColor(void);
+
+uint8_t retInString (char* string);
+uint8_t retInString (char* string);
+uint8_t chrToHx(uint8_t);
+uint32_t parseFadeTimer(uint8_t unformated[],uint8_t fadeCounter);
+// Convert incoming color to formated color
+Timer_A_initUpModeParam Timer_A_params = {0};     // TODO remove this
+
+
+//*****************************************************************************************************
+//
+//   Parameters Initialization
+//
+//*****************************************************************************************************
+//volatile uint8_t bCDCDataReceived_event = FALSE; // Indicates data has been rx'ed
+//char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
+uint8_t i;                                                                                              // General counter value
+uint8_t incomingColor[6];                                                                               // Array for incoming color data
+uint8_t formatedColor[3];                                                                               // Formated array color data
+uint8_t unformatedFade[MAX_FADE_DECIMAL] = "";                                                          // Unformatted Fade tempt storage
+uint8_t transmitCounter = 0;
+char dataBuffer[BUFFER_SIZE] = "";
+char nl[2] = "\n";
+char wholeString[MAX_STR_LENGTH] = "";                                                                  // Entire input str from last 'return'
+char pieceOfString[MAX_STR_LENGTH] = "";                                                                // Holds the new addition to the string
+char outString[MAX_STR_LENGTH] = "";                                                                    // Holds the outgoing string
+char deviceSN[12];
+
+// TODO probably can remove this values after adding the fitstatUSB code
 uint16_t SlowToggle_Period = 20000 - 1;
 uint16_t FastToggle_Period = 1000 - 1;
 
-Timer_A_initUpModeParam Timer_A_params = {0};
+uint32_t decimals;
 
+volatile uint8_t bCDCDataReceived_event = FALSE;                                                        // Flag set by event handler to indicate data has been received into USB buffer
+volatile uint16_t led;
 
-uint8_t transmitCounter = 0;
+long wholeStringCounter;
+long formated;
 
+int seqCounter = 0;
+int counterFade;
+int fadeTimeCounter;
+int n = 0;
 
-//Graphics_Context g_sContext;
+// https://git-server/Andrew/fit-statUSB/wikis/Internal-Flash-Mapping                                   // Compulab Wiki page for memory mapping
+// Revision information from Flash
+char *MAJOR1_ptrB = (char *)INFOB_START;                                                                // Major Revision Start
+char *MINOR1_ptrB = (char *)INFOB_START+2;                                                              // Minor Revision start
+char *SERIAL_ptrB = (char *)INFOB_START+4;                                                              // Serial Number Start
 
-#if defined(__IAR_SYSTEMS_ICC__)
-int16_t __low_level_init(void) {
-    // Stop WDT (Watch Dog Timer)
-    WDTCTL = WDTPW + WDTHOLD;
-    return(1);
-}
-
-#endif
 
 void main(void)
 {
 
     // USB
-    PMM_setVCore(PMM_CORE_LEVEL_2);
+    PMM_setVCore(PMM_CORE_LEVEL_3);
     USBHAL_initPorts();           // Config GPIOS for low-power (output low)
-    USBHAL_initClocks(8000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
-    initTimer();           // Prepare timer for LED toggling
+
+
+
+    USBHAL_initClocks(12000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
+
+    initI2C();
+    // Init LCD i2c
+    //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
 
     __enable_interrupt();  // Enable interrupts globally
 
     // Set up the LCD
-      Template_DriverInit();
-      //
-      //    ssd1306_command(0x21);
-      //    ssd1306_command(0x00);
-      //    ssd1306_command(0x7F);
-      //    ssd1306_command(0x00);
-      //    ssd1306_command(0x22);
-      //    ssd1306_command(0x00);
-      //    ssd1306_command(0x07);
+    Template_DriverInit();
+    ssd1306_display(logo);
+    ssd1306_startscrollright(0x00,0x0F);
+
+    strncat(deviceSN,(char *)SERIAL_ptrB,10);
+    strcat(deviceSN,"\r\n\r\n");
+    fadeTimer = 300;                                                                                    // Default timer 300ms
+
+    colorFadeTimer[MAX_SEQ_COLORS] = 500;                                                                // Last element initialization
+
+    for (n=0;n < MAX_SEQ_COLORS;n++) {
+        colorSeq[n][0] = 0;
+        colorSeq[n][1] = 0;
+        colorSeq[n][2] = 0;
+        colorFadeTimer[n] = 300;
+
+    }
+
+    for (n = 0 ; n < MAX_FADE_DECIMAL ; n++) {
+        unformatedFade[n] = 0x00;
+    }
+    __bis_SR_register( GIE );                                                                           // Enable interrupts globally
+
+
+    __enable_interrupt();  // Enable interrupts globally
+
+    // Gather information from the card
+    //strcpy(deviceSN,"Serial No:\t\t\t1234567890\n\r");
+    //  strcpy(deviceSN,"Device SN: 56987\t Rev.1.0\r\n\r\n");
+
+    allOff();
+    initTimers(0,10,10);
+    currentRGBColor[2] = 5;
+
+
+    //
+    //    ssd1306_command(0x21);
+    //    ssd1306_command(0x00);
+    //    ssd1306_command(0x7F);
+    //    ssd1306_command(0x00);
+    //    ssd1306_command(0x22);
+    //    ssd1306_command(0x00);
+    //    ssd1306_command(0x07);
 
 
 
 
 
-      //    ssd1306_drawPixel(1,5,1);
-      //    ssd1306_drawPixel(2,5,1);
-      //    ssd1306_drawPixel(3,5,1);
-      //    ssd1306_drawPixel(4,5,1);
-      //    ssd1306_drawPixel(5,5,1);
+    //    ssd1306_drawPixel(1,5,1);
+    //    ssd1306_drawPixel(2,5,1);
+    //    ssd1306_drawPixel(3,5,1);
+    //    ssd1306_drawPixel(4,5,1);
+    //    ssd1306_drawPixel(5,5,1);
 
 
-//      __delay_cycles(500000);
-//      ssd1306_dim(0xFF);
-//      uint8_t i = 0;
-//      ssd1306_startscrollright(0x00,0x0F);
-//      ssd1306_invertDisplay(1);
-//      __delay_cycles(5000000);
-//      ssd1306_dim(0xAA);
-//      ssd1306_startscrollleft(0x00,0x0F);
-//
-//      __delay_cycles(5000000);
-//
-//
-//      ssd1306_stopscroll();
-//      //   clearDisplay();
-//      __delay_cycles(50000);
-//
-//      ssd1306_invertDisplay(1);
-//
-//      for (i = 0 ; i < 0xFF ; i++) {
-//          ssd1306_dim(i);
-//          __delay_cycles(50000);
-//      }
-//      ssd1306_dim(0x00);
-//
-//
-//
-//      ssd1306_invertDisplay(0);
-//
-//      ssd1306_drawPixel(0,0,1);
-//      ssd1306_drawPixel(125,50,1);
-//      ssd1306_drawPixel(128,64,1);
-//
-//      ssd1306_display(buffer);
-//      //    ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel
-      //    Template_DriverInit();
-      //Enter LPM0 with interrupts enabled
+    //      __delay_cycles(500000);
+    //      ssd1306_dim(0xFF);
+    //      uint8_t i = 0;
+    //      ssd1306_startscrollright(0x00,0x0F);
+    //      ssd1306_invertDisplay(1);
+    //      __delay_cycles(5000000);
+    //      ssd1306_dim(0xAA);
+    //      ssd1306_startscrollleft(0x00,0x0F);
+    //
+    //      __delay_cycles(5000000);
+    //
+    //
+    //      ssd1306_stopscroll();
+    //      //   clearDisplay();
+    //      __delay_cycles(50000);
+    //
+    //      ssd1306_invertDisplay(1);
+    //
+    //      for (i = 0 ; i < 0xFF ; i++) {
+    //          ssd1306_dim(i);
+    //          __delay_cycles(50000);
+    //      }
+    //      ssd1306_dim(0x00);
+    //
+    //
+    //
+    //      ssd1306_invertDisplay(0);
+    //
+    //      ssd1306_drawPixel(0,0,1);
+    //      ssd1306_drawPixel(125,50,1);
+    //      ssd1306_drawPixel(128,64,1);
+    //
+    //      ssd1306_display(buffer);
+    //      //    ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel
+    //    Template_DriverInit();
+    //Enter LPM0 with interrupts enabled
 
     while (1)
     {
@@ -211,7 +273,7 @@ void main(void)
                         Timer_A_stop(TIMER_A0_BASE);
 
                         // Turn on LED P1.0
-                        GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
+                        GPIO_setOutputHighOnPin(LED_PORT_BOARD, LED_PIN);
 
                         // Prepare the outgoing string
                         strcpy(outString,"\r\nLED is ON\r\n\r\n");
@@ -228,7 +290,7 @@ void main(void)
                         Timer_A_stop(TIMER_A0_BASE);
 
                         // Turn off LED P1.0
-                        GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+                        GPIO_setOutputLowOnPin(LED_PORT_BOARD, LED_PIN);
 
                         // Prepare the outgoing string
                         strcpy(outString,"\r\nLED is OFF\r\n\r\n");
@@ -312,7 +374,7 @@ void main(void)
         case ST_PHYS_CONNECTED_NOENUM_SUSP:
 
             //Turn off LED P1.0
-            GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+            GPIO_setOutputLowOnPin(LED_PORT_BOARD, LED_PIN);
             __bis_SR_register(LPM3_bits + GIE);
             _NOP();
             break;
@@ -340,53 +402,53 @@ void main(void)
 
 
 
-//******************************************************************************
+////******************************************************************************
+////
+////This is the USCI_B0 interrupt vector service routine.
+////
+////******************************************************************************
+//#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+//#pragma vector=USCI_B0_VECTOR
+//__interrupt
+//#elif defined(__GNUC__)
+//__attribute__((interrupt(USCI_B0_VECTOR)))
+//#endif
+//void USCI_B0_ISR (void)
+//{
+//    switch (__even_in_range(UCB0IV,12)){
+//    case USCI_I2C_UCTXIFG:
+//    {
 //
-//This is the USCI_B0 interrupt vector service routine.
+//        //Check TX byte counter
+//        if (transmitCounter < 7){
+//            //Initiate send of character from Master to Slave
+//            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,
+//                                               transmitData[transmitCounter][0]
+//            );
 //
-//******************************************************************************
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=USCI_B0_VECTOR
-__interrupt
-#elif defined(__GNUC__)
-__attribute__((interrupt(USCI_B0_VECTOR)))
-#endif
-void USCI_B0_ISR (void)
-{
-    switch (__even_in_range(UCB0IV,12)){
-    case USCI_I2C_UCTXIFG:
-    {
-
-        //Check TX byte counter
-        if (transmitCounter < 7){
-            //Initiate send of character from Master to Slave
-            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,
-                                               transmitData[transmitCounter][0]
-            );
-
-            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,
-                                               transmitData[transmitCounter][1]
-            );
-
-            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-
-            //Increment TX byte counter
-            transmitCounter++;
-        } else   {
-            //Initiate stop only
-            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-
-            //Clear master interrupt status
-            USCI_B_I2C_clearInterrupt(USCI_B0_BASE,
-                                      USCI_B_I2C_TRANSMIT_INTERRUPT);
-
-            //Exit LPM0 on interrupt return
-            __bic_SR_register_on_exit(LPM0_bits);
-        }
-        break;
-    }
-    }
-}
+//            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,
+//                                               transmitData[transmitCounter][1]
+//            );
+//
+//            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+//
+//            //Increment TX byte counter
+//            transmitCounter++;
+//        } else   {
+//            //Initiate stop only
+//            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+//
+//            //Clear master interrupt status
+//            USCI_B_I2C_clearInterrupt(USCI_B0_BASE,
+//                                      USCI_B_I2C_TRANSMIT_INTERRUPT);
+//
+//            //Exit LPM0 on interrupt return
+//            __bic_SR_register_on_exit(LPM0_bits);
+//        }
+//        break;
+//    }
+//    }
+//}
 
 /*
  * ======== UNMI_ISR ========
@@ -497,47 +559,47 @@ uint8_t retInString (char* string)
  * ======== setTimer_A_Parameters ========
  */
 // This function sets the timer A parameters
-void setTimer_A_Parameters()
-{
-    Timer_A_params.clockSource = TIMER_A_CLOCKSOURCE_ACLK;
-    Timer_A_params.clockSourceDivider = TIMER_A_CLOCKSOURCE_DIVIDER_1;
-    Timer_A_params.timerInterruptEnable_TAIE = TIMER_A_TAIE_INTERRUPT_DISABLE;
-    Timer_A_params.captureCompareInterruptEnable_CCR0_CCIE =
-            TIMER_A_CAPTURECOMPARE_INTERRUPT_ENABLE;
-    Timer_A_params.timerClear = TIMER_A_DO_CLEAR;
-    Timer_A_params.startTimer = false;
-}
+//void setTimer_A_Parameters()
+//{
+//    Timer_A_params.clockSource = TIMER_A_CLOCKSOURCE_ACLK;
+//    Timer_A_params.clockSourceDivider = TIMER_A_CLOCKSOURCE_DIVIDER_1;
+//    Timer_A_params.timerInterruptEnable_TAIE = TIMER_A_TAIE_INTERRUPT_DISABLE;
+//    Timer_A_params.captureCompareInterruptEnable_CCR0_CCIE =
+//            TIMER_A_CAPTURECOMPARE_INTERRUPT_ENABLE;
+//    Timer_A_params.timerClear = TIMER_A_DO_CLEAR;
+//    Timer_A_params.startTimer = false;
+//}
 
 /*
- * ======== initTimer ========
- */
-void initTimer (void)
-{
-    // Configure timer parameters
-    setTimer_A_Parameters();
-
-    // Start timer
-    Timer_A_clearTimerInterrupt(TIMER_A0_BASE);
-
-    // Set timer period to zero
-    Timer_A_params.timerPeriod = 0;
-
-    Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
-}
-
-/*
- * ======== TIMER1_A0_ISR ========
- */
-#if defined(__TI_COMPILER_VERSION__) || (__IAR_SYSTEMS_ICC__)
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void TIMER0_A0_ISR (void)
-#elif defined(__GNUC__) && (__MSP430__)
-void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) TIMER0_A0_ISR (void)
-#else
-#error Compiler not found!
-#endif
-{
-    GPIO_toggleOutputOnPin(LED_PORT, LED_PIN);
-}
+// * ======== initTimer ========
+// */
+//void initTimer (void)
+//{
+//    // Configure timer parameters
+//    setTimer_A_Parameters();
+//
+//    // Start timer
+//    Timer_A_clearTimerInterrupt(TIMER_A0_BASE);
+//
+//    // Set timer period to zero
+//    Timer_A_params.timerPeriod = 0;
+//
+//    Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
+//}
+//
+///*
+// * ======== TIMER1_A0_ISR ========
+// */
+//#if defined(__TI_COMPILER_VERSION__) || (__IAR_SYSTEMS_ICC__)
+//#pragma vector=TIMER0_A0_VECTOR
+//__interrupt void TIMER0_A0_ISR (void)
+//#elif defined(__GNUC__) && (__MSP430__)
+//void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) TIMER0_A0_ISR (void)
+//#else
+//#error Compiler not found!
+//#endif
+//{
+//    GPIO_toggleOutputOnPin(LED_PORT, LED_PIN);
+//}
 
 //Released_Version_5_20_06_02
