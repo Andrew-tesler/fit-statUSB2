@@ -1,62 +1,49 @@
-/* --COPYRIGHT--,BSD
- * Copyright (c) 2016, Texas Instruments Incorporated
- * All rights reserved.
+/**********************************************************
+ * NAME: *
+ * main.c
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
+ * PURPOSE: *
+ * Main Program script
  *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * --/COPYRIGHT--*/
+ * GLOBAL VARIABLES: *
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 26/08/2018   Andrew T.   1.0     initial Release
+ * *
+ *******************************************************************/
+
+
+// General board libraries
+#include <msp430.h>
 #include <defines.c>
 #include <initBoard.h>
-#include <Lcd_Driver/ssd1306_Driver.h>
-#include <msp430.h>
-#include "grlib.h"
-#include "images/images.h"
-#include "driverlib.h"
 #include <string.h>
-
+// LCD related
+#include <Lcd_Driver/ssd1306_Driver.h>
+#include "images/images.h"
+#include "grlib.h"
 #include "driverlib.h"
-
+// USB Related
 #include "USB_config/descriptors.h"
 #include "USB_API/USB_Common/device.h"
-#include "USB_API/USB_Common/usb.h"                 // USB-specific functions
+#include "USB_API/USB_Common/usb.h"
 #include "USB_API/USB_CDC_API/UsbCdc.h"
 #include "USB_app/usbConstructs.h"
+// LED related
+#include "usbLed.h"  // Help functions for the LED's
 
-#include "usbLed.h"                                                                                     // Help functions for the LED's
 
-/*
- * NOTE: Modify hal.h to select a specific evaluation board and customize for
- * your own board.
- */
 
 // Function declarations
 uint8_t retInString (char* string);
-void initTimer(void);
-void setTimer_A_Parameters(void);
+//void initTimer(void);
+//void setTimer_A_Parameters(void);
 // Global flags set by events
 volatile uint8_t bCDCDataReceived_event = FALSE; // Indicates data has been rx'ed
 // without an open rx operation
@@ -94,7 +81,7 @@ void main(void)
     initI2C();
     USBHAL_initClocks(8000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
                           // Init LCD i2c
-    initTimer();           // Prepare timer for LED toggling
+//    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
 
     __enable_interrupt();  // Enable interrupts globally
@@ -494,47 +481,47 @@ uint8_t retInString (char* string)
  * ======== setTimer_A_Parameters ========
  */
 // This function sets the timer A parameters
-void setTimer_A_Parameters()
-{
-    Timer_A_params.clockSource = TIMER_A_CLOCKSOURCE_ACLK;
-    Timer_A_params.clockSourceDivider = TIMER_A_CLOCKSOURCE_DIVIDER_1;
-    Timer_A_params.timerInterruptEnable_TAIE = TIMER_A_TAIE_INTERRUPT_DISABLE;
-    Timer_A_params.captureCompareInterruptEnable_CCR0_CCIE =
-            TIMER_A_CAPTURECOMPARE_INTERRUPT_ENABLE;
-    Timer_A_params.timerClear = TIMER_A_DO_CLEAR;
-    Timer_A_params.startTimer = false;
-}
+//void setTimer_A_Parameters()
+//{
+//    Timer_A_params.clockSource = TIMER_A_CLOCKSOURCE_ACLK;
+//    Timer_A_params.clockSourceDivider = TIMER_A_CLOCKSOURCE_DIVIDER_1;
+//    Timer_A_params.timerInterruptEnable_TAIE = TIMER_A_TAIE_INTERRUPT_DISABLE;
+//    Timer_A_params.captureCompareInterruptEnable_CCR0_CCIE =
+//            TIMER_A_CAPTURECOMPARE_INTERRUPT_ENABLE;
+//    Timer_A_params.timerClear = TIMER_A_DO_CLEAR;
+//    Timer_A_params.startTimer = false;
+//}
 
 /*
- * ======== initTimer ========
- */
-void initTimer (void)
-{
-    // Configure timer parameters
-    setTimer_A_Parameters();
-
-    // Start timer
-    Timer_A_clearTimerInterrupt(TIMER_A0_BASE);
-
-    // Set timer period to zero
-    Timer_A_params.timerPeriod = 0;
-
-    Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
-}
-
-/*
- * ======== TIMER1_A0_ISR ========
- */
-#if defined(__TI_COMPILER_VERSION__) || (__IAR_SYSTEMS_ICC__)
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void TIMER0_A0_ISR (void)
-#elif defined(__GNUC__) && (__MSP430__)
-void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) TIMER0_A0_ISR (void)
-#else
-#error Compiler not found!
-#endif
-{
-    GPIO_toggleOutputOnPin(LED_PORT, LED_PIN);
-}
+// * ======== initTimer ========
+// */
+//void initTimer (void)
+//{
+//    // Configure timer parameters
+//    setTimer_A_Parameters();
+//
+//    // Start timer
+//    Timer_A_clearTimerInterrupt(TIMER_A0_BASE);
+//
+//    // Set timer period to zero
+//    Timer_A_params.timerPeriod = 0;
+//
+//    Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
+//}
+//
+///*
+// * ======== TIMER1_A0_ISR ========
+// */
+//#if defined(__TI_COMPILER_VERSION__) || (__IAR_SYSTEMS_ICC__)
+//#pragma vector=TIMER0_A0_VECTOR
+//__interrupt void TIMER0_A0_ISR (void)
+//#elif defined(__GNUC__) && (__MSP430__)
+//void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) TIMER0_A0_ISR (void)
+//#else
+//#error Compiler not found!
+//#endif
+//{
+//    GPIO_toggleOutputOnPin(LED_PORT, LED_PIN);
+//}
 
 //Released_Version_5_20_06_02
