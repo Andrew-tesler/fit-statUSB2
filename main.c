@@ -38,31 +38,38 @@
 // LED related
 #include "usbLed.h"  // Help functions for the LED's
 
-
-
-// Function declarations
-uint8_t retInString (char* string);
-//void initTimer(void);
-//void setTimer_A_Parameters(void);
-// Global flags set by events
-volatile uint8_t bCDCDataReceived_event = FALSE; // Indicates data has been rx'ed
-// without an open rx operation
-
+//*****************************************************************************
+//
+//  DEFINES
+//
+//*****************************************************************************
 #define MAX_STR_LENGTH 64
+
+//*****************************************************************************
+//
+//   Function declarations
+//
+//*****************************************************************************
+uint8_t retInString (char* string);
+Timer_A_initUpModeParam Timer_A_params = {0};     // TODO remove this
+
+
+//*****************************************************************************
+//
+//   Parameters Initialization
+//
+//*****************************************************************************
+volatile uint8_t bCDCDataReceived_event = FALSE; // Indicates data has been rx'ed
 char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
 
+// TODO probably can remove this values after adding the fitstatUSB code
 // Set/declare toggle delays
 uint16_t SlowToggle_Period = 20000 - 1;
 uint16_t FastToggle_Period = 1000 - 1;
 
-Timer_A_initUpModeParam Timer_A_params = {0};
-
-
 uint8_t transmitCounter = 0;
 
-
 //Graphics_Context g_sContext;
-
 #if defined(__IAR_SYSTEMS_ICC__)
 int16_t __low_level_init(void) {
     // Stop WDT (Watch Dog Timer)
@@ -71,6 +78,14 @@ int16_t __low_level_init(void) {
 }
 
 #endif
+
+
+
+
+
+
+
+
 
 void main(void)
 {
