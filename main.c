@@ -111,10 +111,11 @@ void main(void)
 {
 
     // USB
-    PMM_setVCore(PMM_CORE_LEVEL_2);
+    PMM_setVCore(PMM_CORE_LEVEL_3);
     USBHAL_initPorts();           // Config GPIOS for low-power (output low)
     initI2C();
     USBHAL_initClocks(8000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
+
                           // Init LCD i2c
 //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
@@ -123,6 +124,9 @@ void main(void)
 
     // Set up the LCD
       Template_DriverInit();
+      ssd1306_display(logo);
+      ssd1306_startscrollright(0x00,0x0F);
+
       //
       //    ssd1306_command(0x21);
       //    ssd1306_command(0x00);
