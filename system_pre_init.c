@@ -96,5 +96,5 @@ int16_t _system_pre_init(void)
     /* Return: 0 to omit initialization */
     /* 1 to run initialization          */
     /*==================================*/
-    return(0);
+    return(1);
 }
