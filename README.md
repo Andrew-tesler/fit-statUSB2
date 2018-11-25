@@ -1,3 +1,4 @@
+Project Under development collection of concept and proof of concept for fit-statUSB2 project
 Short description
 
 USB connected diplay with Leds and 2 buttons. Will show messages sent by the user and display LEDs RGB
