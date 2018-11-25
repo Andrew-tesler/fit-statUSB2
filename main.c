@@ -22,15 +22,15 @@
 // General board libraries
 #include <msp430.h>                                                                                     // General board file
 #include <defines.c>                                                                                    // Project globals defines
-#include <initBoard.h>                                                                                  // Ti Board specific functions
-#include <string.h>                                                                                     // String library to handle the String
+#include <initBoard.h>                                                                                  // TI Board specific functions
+#include <string.h>                                                                                     // String library to handle Strings
 #include <stdlib.h>                                                                                     // atoi
-#include "driverlib.h"                                                                                  // Ti Driver library for MSP430 Devices
+#include "driverlib.h"                                                                                  // TI Driver library for MSP430 Devices
 #include "initTimers.h"                                                                                 // Timer specific functions
 #include <stdio.h>
 
 // LCD related
-#include <Lcd_Driver/ssd1306_Driver.h>                                                                  // SSD1306 Driver
+#include <Lcd_Driver/ssd1306_Driver.h>                                                                  // SSD1306 Driver Library file
 #include "images/images.h"                                                                              // Images file for LCD driver
 #include "grlib.h"                                                                                      // TI Graphics library
 
@@ -41,7 +41,7 @@
 #include "USB_API/USB_CDC_API/UsbCdc.h"                                                                 // Part of TI USP API library USB CDC
 #include "USB_app/usbConstructs.h"                                                                      // Part of TI USP API library
 // LED related
-#include "usbLed.h"                                                                                     // Help functions for the LED's
+#include "usbLed.h"                                                                                     // Help functions for RGB LEDS
 
 
 
@@ -50,9 +50,9 @@
 //  DEFINES
 //
 //*****************************************************************************************************
-#define MAX_STR_LENGTH 64
-#define BUFFER_SIZE 256
-#define INFOB_START   (0x1900)
+#define MAX_STR_LENGTH 64                                                                               // Max STR length for USB communication messages
+//#define BUFFER_SIZE 256
+#define INFOB_START   (0x1900)                                                                          // Location start for INFOB in internal Flash(For Non volatile  data)
 
 
 //*****************************************************************************************************
@@ -60,14 +60,11 @@
 //   Function declarations
 //
 //*****************************************************************************************************
-void printHelp(void);
-void converIncomingColor(void);
-
-uint8_t retInString (char* string);
-uint8_t retInString (char* string);
-char chrToHx(uint8_t);
-uint32_t parseFadeTimer(uint8_t unformated[],uint8_t fadeCounter);
-// Convert incoming color to formated color
+void printHelp(void);                                                                                   // Print Help Information to USB CDC
+void converIncomingColor(void);                                                                         // Convert Color from Buffer to Number for the LED's
+char chrToHx(uint8_t);                                                                                  // Convert Char to Uint8 for the LED function
+uint8_t retInString (char* string);                                                                     // Check buffer for RETURN Key from user
+uint32_t parseFadeTimer(uint8_t unformated[],uint8_t fadeCounter);                                      // Parse the buffer for the fade timer
 Timer_A_initUpModeParam Timer_A_params = {0};     // TODO remove this
 
 
@@ -76,14 +73,14 @@ Timer_A_initUpModeParam Timer_A_params = {0};     // TODO remove this
 //   Parameters Initialization
 //
 //*****************************************************************************************************
-//volatile uint8_t bCDCDataReceived_event = FALSE; // Indicates data has been rx'ed
-//char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
+
 uint8_t i;                                                                                              // General counter value
 uint8_t incomingColor[6];                                                                               // Array for incoming color data
 uint8_t formatedColor[3];                                                                               // Formated array color data
 uint8_t unformatedFade[MAX_FADE_DECIMAL] = "";                                                          // Unformatted Fade tempt storage
 uint8_t transmitCounter = 0;
-char dataBuffer[BUFFER_SIZE] = "";
+
+//char dataBuffer[BUFFER_SIZE] = "";
 char nl[2] = "\n";
 char wholeString[MAX_STR_LENGTH] = "";                                                                  // Entire input str from last 'return'
 char pieceOfString[MAX_STR_LENGTH] = "";                                                                // Holds the new addition to the string
@@ -97,9 +94,9 @@ uint16_t FastToggle_Period = 1000 - 1;
 uint32_t decimals;
 
 volatile uint8_t bCDCDataReceived_event = FALSE;                                                        // Flag set by event handler to indicate data has been received into USB buffer
-volatile uint16_t led;
+volatile uint16_t led;                                                                                  // LED Color?
 
-long wholeStringCounter;
+long wholeStringCounter;                                                                                // Counter for the Communication String to USB
 long formated;
 
 int seqCounter = 0;
@@ -107,43 +104,37 @@ int counterFade;
 int fadeTimeCounter;
 int n = 0;
 
+// TODO Prepare WiKi for fitStatUSB2
 // https://git-server/Andrew/fit-statUSB/wikis/Internal-Flash-Mapping                                   // Compulab Wiki page for memory mapping
 // Revision information from Flash
 char *MAJOR1_ptrB = (char *)INFOB_START;                                                                // Major Revision Start
 char *MINOR1_ptrB = (char *)INFOB_START+2;                                                              // Minor Revision start
 char *SERIAL_ptrB = (char *)INFOB_START+4;                                                              // Serial Number Start
 
-
 void main(void)
 {
 
     // USB
     PMM_setVCore(PMM_CORE_LEVEL_3);
-    USBHAL_initPorts();           // Config GPIOS for low-power (output low)
-
-
-
-    USBHAL_initClocks(12000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
-
-    initI2C();
-    // Init LCD i2c
+    USBHAL_initPorts();                                                                                 // Config GPIOS for low-power (output low)
+    USBHAL_initClocks(12000000);                                                                        // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
+    initI2C();                                                                                          // Init LCD i2c
+    Template_DriverInit();                                                                              // Init Template LCD Driver TODO Change to some other related name
     //    initTimer();           // Prepare timer for LED toggling
-    USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
+    USB_setup(TRUE, TRUE);                                                                              // Init USB & events; if a host is present, connect
 
     __enable_interrupt();  // Enable interrupts globally
 
-    // Set up the LCD
-    Template_DriverInit();
-    ssd1306_display(logo);
-    ssd1306_startscrollright(0x00,0x0F);
+    ssd1306_display(logo);                                                                              // Print the logo to the LCD
+    ssd1306_startscrollright(0x00,0x0F);                                                                // Start Scroll Command
 
-    strncat(deviceSN,(char *)SERIAL_ptrB,10);
+    strncat(deviceSN,(char *)SERIAL_ptrB,10);                                                           // Read the SN stored in internal flash and store(writed by the ATP)
     strcat(deviceSN,"\r\n\r\n");
     fadeTimer = 300;                                                                                    // Default timer 300ms
 
-    colorFadeTimer[MAX_SEQ_COLORS] = 500;                                                                // Last element initialization
+    colorFadeTimer[MAX_SEQ_COLORS] = 500;                                                               // Last element initialization
 
-    for (n=0;n < MAX_SEQ_COLORS;n++) {
+    for (n=0;n < MAX_SEQ_COLORS;n++) {                                                                  // Initiate Colors
         colorSeq[n][0] = 0;
         colorSeq[n][1] = 0;
         colorSeq[n][2] = 0;
@@ -157,7 +148,7 @@ void main(void)
     __bis_SR_register( GIE );                                                                           // Enable interrupts globally
 
 
-    __enable_interrupt();  // Enable interrupts globally
+//    __enable_interrupt();  // Enable interrupts globally
 
     // Gather information from the card
     //strcpy(deviceSN,"Serial No:\t\t\t1234567890\n\r");
@@ -168,62 +159,6 @@ void main(void)
     currentRGBColor[2] = 5;
 
 
-    //
-    //    ssd1306_command(0x21);
-    //    ssd1306_command(0x00);
-    //    ssd1306_command(0x7F);
-    //    ssd1306_command(0x00);
-    //    ssd1306_command(0x22);
-    //    ssd1306_command(0x00);
-    //    ssd1306_command(0x07);
-
-
-
-
-
-    //    ssd1306_drawPixel(1,5,1);
-    //    ssd1306_drawPixel(2,5,1);
-    //    ssd1306_drawPixel(3,5,1);
-    //    ssd1306_drawPixel(4,5,1);
-    //    ssd1306_drawPixel(5,5,1);
-
-
-    //      __delay_cycles(500000);
-    //      ssd1306_dim(0xFF);
-    //      uint8_t i = 0;
-    //      ssd1306_startscrollright(0x00,0x0F);
-    //      ssd1306_invertDisplay(1);
-    //      __delay_cycles(5000000);
-    //      ssd1306_dim(0xAA);
-    //      ssd1306_startscrollleft(0x00,0x0F);
-    //
-    //      __delay_cycles(5000000);
-    //
-    //
-    //      ssd1306_stopscroll();
-    //      //   clearDisplay();
-    //      __delay_cycles(50000);
-    //
-    //      ssd1306_invertDisplay(1);
-    //
-    //      for (i = 0 ; i < 0xFF ; i++) {
-    //          ssd1306_dim(i);
-    //          __delay_cycles(50000);
-    //      }
-    //      ssd1306_dim(0x00);
-    //
-    //
-    //
-    //      ssd1306_invertDisplay(0);
-    //
-    //      ssd1306_drawPixel(0,0,1);
-    //      ssd1306_drawPixel(125,50,1);
-    //      ssd1306_drawPixel(128,64,1);
-    //
-    //      ssd1306_display(buffer);
-    //      //    ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel
-    //    Template_DriverInit();
-    //Enter LPM0 with interrupts enabled
 
     while (1)
     {
