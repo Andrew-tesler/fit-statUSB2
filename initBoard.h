@@ -42,5 +42,6 @@
 void USBHAL_initPorts(void);
 void USBHAL_initClocks(uint32_t mclkFreq);
 void initI2C(void);
+void initButton();
 
 

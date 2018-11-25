@@ -256,3 +256,38 @@ void initI2C() {
     USCI_B_I2C_enable(USCI_B0_BASE);
 }
 
+/*
+ * Init The two attached Buttons, Used for User Feedback to the System.
+ * The complete User Interface and reporting not defined Yet(Keyboard?)
+ */
+void initButton() {
+    // Left button on the launch Pad
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P2, GPIO_PIN1);
+    GPIO_selectInterruptEdge(GPIO_PORT_P2, GPIO_PIN1,GPIO_HIGH_TO_LOW_TRANSITION);
+    GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN1);
+    GPIO_enableInterrupt(GPIO_PORT_P2, GPIO_PIN1);
+
+    // Right button on the launch pad
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN1);
+    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN1,GPIO_HIGH_TO_LOW_TRANSITION);
+    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN1);
+    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN1);
+
+
+
+}
+
+
+#pragma vector=PORT1_VECTOR
+__interrupt void Port_1(void)
+{
+    __no_operation();
+    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN1);
+}
+
+#pragma vector=PORT2_VECTOR
+__interrupt void Port_2(void)
+{
+    __no_operation();
+    GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN1);
+}
