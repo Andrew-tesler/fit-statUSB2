@@ -119,6 +119,7 @@ void main(void)
     USBHAL_initPorts();                                                                                 // Config GPIOS for low-power (output low)
     USBHAL_initClocks(12000000);                                                                        // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
     initI2C();                                                                                          // Init LCD i2c
+    initButton();                                                                                       // Init buttons
     Template_DriverInit();                                                                              // Init Template LCD Driver TODO Change to some other related name
     //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE);                                                                              // Init USB & events; if a host is present, connect
@@ -259,9 +260,6 @@ void main(void)
 
 
                         initFade(2);
-
-
-
 
                         //initTimers(formatedColor[0],formatedColor[1],formatedColor[2]);                 // Start the timers with the formated information
 
@@ -455,10 +453,7 @@ void main(void)
 
 
     //END USB
-
     __delay_cycles(50);
-
-
     __bis_SR_register(LPM0_bits + GIE);
     __no_operation();
 
