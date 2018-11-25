@@ -15,6 +15,7 @@
  * Date        Author       Release Description Of Change *
  * ----        ------       ------- --------------------- *
  * 26/08/2018   Andrew T.   1.0     initial Release
+ * 25/11/2018   Andrew T.   1.1.0   Added fitStatUSB Code
  * *
  *******************************************************************/
 
