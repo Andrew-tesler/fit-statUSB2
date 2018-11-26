@@ -143,19 +143,18 @@ void USBHAL_initPorts(void)
     //Assign I2C pins to USCI_B0 and set the alternative function for them
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,GPIO_PIN0 + GPIO_PIN1);
 
-    // Set the left button on the lunch pad as input high
-    GPIO_setAsInputPinWithPullUpResistor(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);
-
-    // Set the Right button on the lunch pad as input high
-    GPIO_setAsInputPinWithPullUpResistor(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);
-
-
 #elif defined FITSTATUSB2_V1
     #error "initBoard.c - Write correct defines for GPIO"
     // TODO - XTAL Pins
     // TODO - I2C pins
     // TODO - buttons
 #endif
+
+    // Set the left button on the lunch pad as input high
+    GPIO_setAsInputPinWithPullUpResistor(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);
+
+    // Set the Right button on the lunch pad as input high
+    GPIO_setAsInputPinWithPullUpResistor(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);
 
 
 }
