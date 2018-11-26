@@ -143,9 +143,18 @@ void USBHAL_initPorts(void)
     //Assign I2C pins to USCI_B0 and set the alternative function for them
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,GPIO_PIN0 + GPIO_PIN1);
 
+    // Set the left button on the lunch pad as input high
+    GPIO_setAsInputPinWithPullUpResistor(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);
+
+    // Set the Right button on the lunch pad as input high
+    GPIO_setAsInputPinWithPullUpResistor(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);
+
 
 #elif defined FITSTATUSB2_V1
-    #error "initBoard.c - Write correct defines for GPIO" // TODO
+    #error "initBoard.c - Write correct defines for GPIO"
+    // TODO - XTAL Pins
+    // TODO - I2C pins
+    // TODO - buttons
 #endif
 
 
@@ -171,7 +180,9 @@ void USBHAL_initClocks(uint32_t mclkFreq)
     UCS_initClockSignal(UCS_MCLK,UCS_XT2CLK_SELECT,UCS_CLOCK_DIVIDER_1);
 
 #elif defined FITSTATUSB2_V1
-    #error "initBoard.c - Write correct defines Clock" // TODO
+    #error "initBoard.c - Write correct defines Clock"
+    // TODO - Clock
+
 #endif
 
 
@@ -208,33 +219,27 @@ void initI2C() {
  * The complete User Interface and reporting not defined Yet(Keyboard?)
  */
 void initButton() {
-    // Left button on the launch Pad
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P2, GPIO_PIN1);
-    GPIO_selectInterruptEdge(GPIO_PORT_P2, GPIO_PIN1,GPIO_HIGH_TO_LOW_TRANSITION);
-    GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN1);
-    GPIO_enableInterrupt(GPIO_PORT_P2, GPIO_PIN1);
 
-    // Right button on the launch pad
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN1);
-    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN1,GPIO_HIGH_TO_LOW_TRANSITION);
-    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN1);
-    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN1);
+    GPIO_selectInterruptEdge(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN,GPIO_HIGH_TO_LOW_TRANSITION);            // Set Interrupt edge from high to low
+    GPIO_clearInterrupt(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);                                             // Clear interrupt
+    GPIO_enableInterrupt(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);                                            // Enable interrupt
 
-
-
+    GPIO_selectInterruptEdge(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN,GPIO_HIGH_TO_LOW_TRANSITION);          // Set Interrupt edge from high to low
+    GPIO_clearInterrupt(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);                                           // Clear interrupt
+    GPIO_enableInterrupt(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);                                          // Enable interrupt
 }
 
-
+// ISR for the 2 buttons
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
     __no_operation();
-    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN1);
+    GPIO_clearInterrupt(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);
 }
 
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void)
 {
     __no_operation();
-    GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN1);
+    GPIO_clearInterrupt(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);
 }
