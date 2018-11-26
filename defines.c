@@ -136,11 +136,18 @@
 //  DEFINES FOR led GPIO TIMINNGS
 //
 //*****************************************************************************************************
-#define MAX_FADE_DECIMAL        5                   // Maximum fade decimal numbers, If increasing size check all related value size also
+#define MAX_FADE_DECIMAL        5                                                                       // Maximum fade decimal numbers, If increasing size check all related value size also
 
 // TODO Check for some other method to store information or increase the code size using different MCU
-#define MAX_SEQ_COLORS          20                  // Maximum Color in sequence that can accept from the user(limited by code size)
+#define MAX_SEQ_COLORS          20                                                                      // Maximum Color in sequence that can accept from the user(limited by code size)
 
-
+//*****************************************************************************************************
+//
+//  Board Globals
+//
+//*****************************************************************************************************
+uint32_t myACLK;                                                                                        // Board Temp ACLK
+uint32_t mySMCLK;                                                                                       // Board Temp SMCLK
+uint32_t myMCLK;                                                                                        // Board Temp MCLK
 
 
