@@ -29,20 +29,37 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
-/*
- * ======== hal.c ========
- *  Created on: Jul 21, 2018
- *      Author: Andrew Tesler
+/**********************************************************
+ * NAME: initBoard.c
  *
- */
-#include <defines.c>
-#include <initBoard.h>
-#include "msp430.h"
+ * PURPOSE: Collect all functions that initialize the board to init state
+ *
+ * GLOBAL VARIABLES:
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 26/08/2018   Andrew T.   0.1.0    initial Release
+ * *
+ * *
+ *******************************************************************/
 
-#include "driverlib.h"
+//*****************************************************************************************************
+//
+//  INCLUDE
+//
+//*****************************************************************************************************
+#include <defines.c>                                                                                    // Define file
+#include <initBoard.h>                                                                                  // Header file of the initboard
+#include "msp430.h"                                                                                     // Ti MSP430 header file
+#include "driverlib.h"                                                                                  // Ti Driver library file
+#include "USB_API/USB_Common/device.h"                                                                  // Ti USB deice init file
+#include "USB_config/descriptors.h"                                                                     // Ti USB descriptor file
 
-#include "USB_API/USB_Common/device.h"
-#include "USB_config/descriptors.h"
 
 #if defined LAUNCH_PAD
     #define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                    // 32KHz
