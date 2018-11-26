@@ -62,25 +62,15 @@
 
 
 #if defined LAUNCH_PAD
-    #define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                    // 32KHz
-    #define HF_CRYSTAL_FREQUENCY_IN_HZ     4000000                                  // 12MHz // Launch pad
+    #define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                                        // 32KHz
+    #define HF_CRYSTAL_FREQUENCY_IN_HZ     4000000                                                      // 4MHz
+    #define MCLK_DESIRED_FREQUENCY_IN_KHZ  12000                                                        // 12MHz
+    #define MCLK_FLLREF_RATIO              MCLK_DESIRED_FREQUENCY_IN_KHZ / ( UCS_REFOCLK_FREQUENCY / 1024 )    // Ratio = 250
+
+#elif defined FITSTATUSB2_V1
+    #error "initBoard.c - Write correct defines for clock" // TODO
 #endif
 
-//#define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                    // 32KHz
-//#define HF_CRYSTAL_FREQUENCY_IN_HZ     12000000                                  // 12MHz
-//#define HF_CRYSTAL_FREQUENCY_IN_HZ     4000000                                  // 12MHz // Launch pad
-
-#define MCLK_DESIRED_FREQUENCY_IN_KHZ  12000                                     // 26MHz
-#define MCLK_FLLREF_RATIO              MCLK_DESIRED_FREQUENCY_IN_KHZ / ( UCS_REFOCLK_FREQUENCY / 1024 )    // Ratio = 250
-
-
-
-//#define GPIO_ALL  GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
-//        GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
-
-uint32_t myACLK;
-uint32_t mySMCLK;
-uint32_t myMCLK;
 
 /*
  * This function drives all the I/O's as output-low, to avoid floating inputs
@@ -142,12 +132,18 @@ void USBHAL_initPorts(void)
     GPIO_setAsOutputPin(GPIO_PORT_PJ, GPIO_ALL);
 #endif
 
-    GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_ALL);
 
+    // Board specific GPIO defines
+#if defined LAUNCH_PAD
+    // X2OUT-P5.3, XT2IN-5.2. Soldered on board XTAL
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P5,GPIO_PIN3 + GPIO_PIN2);
+    // XIN-P5.4, XOUT-P5.5. Soldered on board LFXTAL
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P5,GPIO_PIN4 + GPIO_PIN5);
 
-    // Init GPIO alternative function directly from timer
-//    GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);// Set the RGB LED GPIO to alternative function to power the LEDS directly from timer
+#elif defined FITSTATUSB2_V1
+    #error "initBoard.c - Write correct defines for GPIO" // TODO
+#endif
+
 
 }
 
@@ -156,92 +152,31 @@ void USBHAL_initClocks(uint32_t mclkFreq)
 {
 
 #if defined LAUNCH_PAD
-    // Defined Clocks
-#else
-    #error "Validate clock and add if statement"
+    // Initiate the HFXTAL
+    UCS_turnOnXT2( UCS_XT2_DRIVE_8MHZ_16MHZ );
+    // Initiate the LFXTAL
+    UCS_turnOnLFXT1(UCS_XCAP_0,UCS_XT1_DRIVE_0);
+    // Set the frequency to the external xtal
+    UCS_setExternalClockSource( LF_CRYSTAL_FREQUENCY_IN_HZ,HF_CRYSTAL_FREQUENCY_IN_HZ);
+
+    // Set the fll reference as the XT1 CLK
+    UCS_initClockSignal(UCS_FLLREF,UCS_XT1CLK_SELECT,UCS_CLOCK_DIVIDER_1);
+    // Select XT2 as oscillator source for SMCLK with divider 2
+    UCS_initClockSignal(UCS_SMCLK,UCS_XT2CLK_SELECT,UCS_CLOCK_DIVIDER_2);
+    // Select XT2 as oscillator source for the MCLK
+    UCS_initClockSignal(UCS_MCLK,UCS_XT2CLK_SELECT,UCS_CLOCK_DIVIDER_1);
+
+#elif defined FITSTATUSB2_V1
+    #error "initBoard.c - Write correct defines Clock" // TODO
 #endif
 
+
+    // Store Clock freq for debugging
     myACLK = UCS_getACLK();
     mySMCLK =  UCS_getSMCLK();
     myMCLK = UCS_getMCLK();
-
+    // Needed for setting break point
     __no_operation();
-
-    // Crystal Alternative function pins
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-            GPIO_PORT_P5,                                // XIN  on P5.4
-            GPIO_PIN3 +                                  // XT2OUT on P5.3
-            GPIO_PIN2                                    // XT2IN  on P5.2
-    );
-
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-            GPIO_PORT_P5,
-            GPIO_PIN4 +                                  // XIN on P5.4
-            GPIO_PIN5                                    // XOUT  on P5.5
-    );
-
-
-    //       PMM_setVCore( PMM_CORE_LEVEL_3 );
-
-    UCS_turnOnXT2( UCS_XT2_DRIVE_8MHZ_16MHZ );
-
-    UCS_turnOnLFXT1(UCS_XCAP_0,UCS_XT1_DRIVE_0);
-
-    UCS_setExternalClockSource(
-            LF_CRYSTAL_FREQUENCY_IN_HZ,                                         // XT1CLK input
-            HF_CRYSTAL_FREQUENCY_IN_HZ                                          // XT2CLK input
-    );
-
-
-
-    UCS_initClockSignal(
-            UCS_FLLREF,
-            UCS_REFOCLK_SELECT,
-            UCS_CLOCK_DIVIDER_1);
-
-    // Select XT2 as oscillator source for SMCLK
-    UCS_initClockSignal(
-            UCS_SMCLK,                                   // Clock you're configuring
-            UCS_XT2CLK_SELECT,                           // Clock source
-            UCS_CLOCK_DIVIDER_2                          // Divide down clock source by this much
-    );
-
-    UCS_initClockSignal(
-            UCS_MCLK,
-            UCS_XT2CLK_SELECT,
-            UCS_CLOCK_DIVIDER_1
-    );
-
-
-    UCS_initClockSignal(
-            UCS_ACLK,
-            UCS_XT1CLK_SELECT,
-            UCS_CLOCK_DIVIDER_1);
-
-    //       UCS_initFLLSettle(
-    //               mclkFreq/1000,
-    //               mclkFreq/32768);
-
-
-    myACLK = UCS_getACLK();
-    mySMCLK =  UCS_getSMCLK();
-    myMCLK = UCS_getMCLK();
-
-    __no_operation();
-    //    UCS_initClockSignal(
-    //            UCS_FLLREF,
-    //            UCS_REFOCLK_SELECT,
-    //            UCS_CLOCK_DIVIDER_1);
-    //
-    //    UCS_initClockSignal(
-    //            UCS_ACLK,
-    //            UCS_REFOCLK_SELECT,
-    //            UCS_CLOCK_DIVIDER_1);
-    //
-    //    UCS_initFLLSettle(
-    //            mclkFreq/1000,
-    //            mclkFreq/32768);
-
 }
 
 /*
