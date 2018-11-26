@@ -31,6 +31,8 @@
  * --/COPYRIGHT--*/
 /*
  * ======== hal.c ========
+ *  Created on: Jul 21, 2018
+ *      Author: Andrew Tesler
  *
  */
 #include <defines.c>

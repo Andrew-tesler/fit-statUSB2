@@ -30,13 +30,25 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
 
-/*
- * globals.c
+/**********************************************************
+ * NAME: *
+ * defines.c
  *
- *  Created on: Jul 21, 2018
- *      Author: Andrew Tesler
+ * PURPOSE: Main define and global virables for the file
  *
- */
+ *
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 26/11/2018  Andrew T.     0.1.0     initial Release
+ *
+ * *
+ *******************************************************************/
 
 //*****************************************************************************************************
 //
