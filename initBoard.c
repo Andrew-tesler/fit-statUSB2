@@ -140,6 +140,10 @@ void USBHAL_initPorts(void)
     // XIN-P5.4, XOUT-P5.5. Soldered on board LFXTAL
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P5,GPIO_PIN4 + GPIO_PIN5);
 
+    //Assign I2C pins to USCI_B0 and set the alternative function for them
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,GPIO_PIN0 + GPIO_PIN1);
+
+
 #elif defined FITSTATUSB2_V1
     #error "initBoard.c - Write correct defines for GPIO" // TODO
 #endif
@@ -180,34 +184,23 @@ void USBHAL_initClocks(uint32_t mclkFreq)
 }
 
 /*
- * Init I2C device for the LCD device
+ * Init I2C As master for controlling the LCD
+ *
  */
 void initI2C() {
-    //Assign I2C pins to USCI_B0
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-            GPIO_PORT_P3,
-            GPIO_PIN0 + GPIO_PIN1
-    );
 
     //Initialize Master
     USCI_B_I2C_initMasterParam param = {0};
-    param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;
-    param.i2cClk = UCS_getSMCLK();
-    param.dataRate = USCI_B_I2C_SET_DATA_RATE_400KBPS;
-    USCI_B_I2C_initMaster(USCI_B0_BASE, &param);
 
-    //Specify slave address
-    USCI_B_I2C_setSlaveAddress(USCI_B0_BASE,
-                               SLAVE_ADDRESS
-    );
+    param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;                                             // Set SMCLK as SPI Clock source
+    param.i2cClk = UCS_getSMCLK();                                                                      // Get the SPI clock the same as SMCLK
+    param.dataRate = USCI_B_I2C_SET_DATA_RATE_400KBPS;                                                  // Set Data rate to 400KBS
 
-    //Set Transmit mode
-    USCI_B_I2C_setMode(USCI_B0_BASE,
-                       USCI_B_I2C_TRANSMIT_MODE
-    );
+    USCI_B_I2C_initMaster(USCI_B0_BASE, &param);                                                        // Init I2C based on the parameters provided
 
-    //Enable I2C Module to start operations
-    USCI_B_I2C_enable(USCI_B0_BASE);
+    USCI_B_I2C_setSlaveAddress(USCI_B0_BASE,SLAVE_ADDRESS);                                             // Set the I2C to communicate using slave address
+    USCI_B_I2C_setMode(USCI_B0_BASE,USCI_B_I2C_TRANSMIT_MODE);                                          // Set I2C to Transmit mode
+    USCI_B_I2C_enable(USCI_B0_BASE);                                                                    //Enable I2C Module to start operations
 }
 
 /*
