@@ -82,19 +82,19 @@ void initTimers(int red,int green,int blue) {
         Red = red;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_R);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_R);                                    // Set the Pin to input thus powering off the LED
     }
     if (green > 0 & green <= 255){
         Green = green;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_G);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_G);                                    // Set the Pin to input thus powering off the LED
     }
     if (blue > 0 & blue <= 255){
         Blue = blue;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_B);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_B);                                    // Set the Pin to input thus powering off the LED
     }
 
 
