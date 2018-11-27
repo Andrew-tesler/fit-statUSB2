@@ -200,8 +200,6 @@ ssd1306_DriverInit(void)
 
     ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel   0x2F
 
-
-
 }
 
 // Send command to the display
@@ -223,11 +221,22 @@ void ssd1306_command(uint8_t c) {
 
 }
 
+//! Draws a pixel on the screen.
+//!
+
+//! \param lX is the X coordinate of the pixel.
+//! \param lY is the Y coordinate of the pixel.
+//! \param ulValue is the color of the pixel.
+//!
+//! This function sets the given pixel to a particular color.  The coordinates
+//! of the pixel checked
+//!
+//! \return None.
+//
+//*****************************************************************************
 void ssd1306_drawPixel(int16_t x, int16_t y, uint16_t color) {
     if ((x < 0) || (x >= 128) || (y < 0) || (y >= 64))
         return;
-
-
 
     x = 128 - x - 1;
     y = 64 - y - 1;
@@ -282,10 +291,9 @@ void ssd1306_display(uint8_t array[]) {
         }
         i--;
         USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-
-
     }
 }
+
 
 void ssd1306_clearDisplay() {
     uint16_t i;
@@ -341,6 +349,169 @@ void ssd1306_invertDisplay(uint8_t i) {
     ssd1306_command(SSD1306_NORMALDISPLAY);
   }
 }
+
+//*****************************************************************************
+//
+//! Draws a horizontal sequence of pixels on the screen.
+//!
+//! \param pvDisplayData is a pointer to the driver-specific data for this
+//! display driver.
+//! \param lX is the X coordinate of the first pixel.
+//! \param lY is the Y coordinate of the first pixel.
+//! \param lX0 is sub-pixel offset within the pixel data, which is valid for 1
+//! or 4 bit per pixel formats.
+//! \param lCount is the number of pixels to draw.
+//! \param lBPP is the number of bits per pixel; must be 1, 4, or 8.
+//! \param pucData is a pointer to the pixel data.  For 1 and 4 bit per pixel
+//! formats, the most significant bit(s) represent the left-most pixel.
+//! \param pucPalette is a pointer to the palette used to draw the pixels.
+//!
+//! This function draws a horizontal sequence of pixels on the screen, using
+//! the supplied palette.  For 1 bit per pixel format, the palette contains
+//! pre-translated colors; for 4 and 8 bit per pixel formats, the palette
+//! contains 24-bit RGB values that must be translated before being written to
+//! the display.
+//!
+//! \return None.
+//
+//*****************************************************************************
+void ssd1306_DriverPixelDrawMultiple(
+                                 int16_t lX,
+                                 int16_t lY,
+                                 int16_t lX0,
+                                 int16_t lCount,
+                                 int16_t lBPP,
+                                 const uint8_t *pucData,
+                                 const uint32_t *pucPalette)
+{
+    uint16_t ulByte;
+
+    //
+    // Determine how to interpret the pixel data based on the number of bits
+    // per pixel.
+    //
+    switch(lBPP)
+    {
+    // The pixel data is in 1 bit per pixel format
+    case 1:
+    {
+        // Loop while there are more pixels to draw
+        while(lCount > 0)
+        {
+            // Get the next byte of image data
+            ulByte = *pucData++;
+
+            // Loop through the pixels in this byte of image data
+            for(; (lX0 < 8) && lCount; lX0++, lCount--)
+            {
+                // Draw this pixel in the appropriate color
+                ssd1306_drawPixel( lX++, lY,
+                                         ((uint16_t *)buffer)[(ulByte >>
+                                                 (7 -
+                                                         lX0)) & 1]);
+            }
+
+            // Start at the beginning of the next byte of image data
+            lX0 = 0;
+        }
+        // The image data has been drawn
+
+        break;
+    }
+
+    // The pixel data is in 2 bit per pixel format
+    case 2:
+    {
+        // Loop while there are more pixels to draw
+        while(lCount > 0)
+        {
+            // Get the next byte of image data
+            ulByte = *pucData++;
+
+            // Loop through the pixels in this byte of image data
+            for(; (lX0 < 4) && lCount; lX0++, lCount--)
+            {
+                // Draw this pixel in the appropriate color
+                ssd1306_drawPixel( lX++, lY,
+                                         ((uint16_t *)pucPalette)[(ulByte >>
+                                                 (6 -
+                                                         (lX0 <<
+                                                                 1))) & 3]);
+            }
+
+            // Start at the beginning of the next byte of image data
+            lX0 = 0;
+        }
+        // The image data has been drawn
+
+        break;
+    }
+    // The pixel data is in 4 bit per pixel format
+    case 4:
+    {
+        // Loop while there are more pixels to draw.  "Duff's device" is
+        // used to jump into the middle of the loop if the first nibble of
+        // the pixel data should not be used.  Duff's device makes use of
+        // the fact that a case statement is legal anywhere within a
+        // sub-block of a switch statement.  See
+        // http://en.wikipedia.org/wiki/Duff's_device for detailed
+        // information about Duff's device.
+        switch(lX0 & 1)
+        {
+        case 0:
+
+            while(lCount)
+            {
+                // Get the upper nibble of the next byte of pixel data
+                // and extract the corresponding entry from the palette
+                ulByte = (*pucData >> 4);
+                ulByte = (*(uint16_t *)(pucPalette + ulByte));
+                // Write to LCD screen
+                ssd1306_drawPixel( lX++, lY, ulByte);
+
+                // Decrement the count of pixels to draw
+                lCount--;
+
+                // See if there is another pixel to draw
+                if(lCount)
+                {
+        case 1:
+            // Get the lower nibble of the next byte of pixel
+            // data and extract the corresponding entry from
+            // the palette
+            ulByte = (*pucData++ & 15);
+            ulByte = (*(uint16_t *)(pucPalette + ulByte));
+            // Write to LCD screen
+            ssd1306_drawPixel( lX++, lY, ulByte);
+
+            // Decrement the count of pixels to draw
+            lCount--;
+                }
+            }
+        }
+        // The image data has been drawn.
+
+        break;
+    }
+
+    // The pixel data is in 8 bit per pixel format
+    case 8:
+    {
+        // Loop while there are more pixels to draw
+        while(lCount--)
+        {
+            // Get the next byte of pixel data and extract the
+            // corresponding entry from the palette
+            ulByte = *pucData++;
+            ulByte = (*(uint16_t *)(pucPalette + ulByte));
+            // Write to LCD screen
+            ssd1306_drawPixel(lX++, lY, ulByte);
+        }
+        // The image data has been drawn
+        break;
+    }
+    }
+}
 //*****************************************************************************
 //
 // All the following functions (below) for the LCD driver are required by grlib
@@ -363,32 +534,32 @@ void ssd1306_invertDisplay(uint8_t i) {
 //! \return None.
 //
 //*****************************************************************************
-// TemplateDisplayFix
-static void
-Template_DriverPixelDraw(void *pvDisplayData,
-                         int16_t lX,
-                         int16_t lY,
-                         uint16_t ulValue)
-{
-    // Check if the pixel place with LCD boundaries
-    if ((lX < 0) | (lX >= SSD1306_LCDWIDTH)  | ( lY < 0 ) | (lY >= SSD1306_LCDHEIGHT))
-            return;
-
-
-    /* This function already has checked that the pixel is within the extents of
-       the LCD screen and the color ulValue has already been translated to the LCD.
-       This function typically looks like:*/
-
-    // Interpret pixel data (if needed)
-    // Update buffer (if applicable)
-    // Template_Memory[lY * LCD_Y_SIZE + (lX * BPP / 8)] = , |= , &= ...
-    // Template memory must be modified at the bit level for 1/2/4BPP displays
-
-   // buffer[lX+ (lY/8)*SSD1306_LCDWIDTH] |=  (1 << (lY&7));
-
-    //SetAddress(MAPPED_X(lX, lY), MAPPED_Y(lX, lY));
-    //WriteData(ulValue);
-}
+//// TemplateDisplayFix
+//static void
+//Template_DriverPixelDraw(void *pvDisplayData,
+//                         int16_t lX,
+//                         int16_t lY,
+//                         uint16_t ulValue)
+//{
+//    // Check if the pixel place with LCD boundaries
+//    if ((lX < 0) | (lX >= SSD1306_LCDWIDTH)  | ( lY < 0 ) | (lY >= SSD1306_LCDHEIGHT))
+//            return;
+//
+//
+//    /* This function already has checked that the pixel is within the extents of
+//       the LCD screen and the color ulValue has already been translated to the LCD.
+//       This function typically looks like:*/
+//
+//    // Interpret pixel data (if needed)
+//    // Update buffer (if applicable)
+//    // Template_Memory[lY * LCD_Y_SIZE + (lX * BPP / 8)] = , |= , &= ...
+//    // Template memory must be modified at the bit level for 1/2/4BPP displays
+//
+//   // buffer[lX+ (lY/8)*SSD1306_LCDWIDTH] |=  (1 << (lY&7));
+//
+//    //SetAddress(MAPPED_X(lX, lY), MAPPED_Y(lX, lY));
+//    //WriteData(ulValue);
+//}
 
 
 //Template_DriverPixelDraw(void *pvDisplayData,
@@ -442,7 +613,7 @@ Template_DriverPixelDraw(void *pvDisplayData,
 //
 //*****************************************************************************
 static void
-Template_DriverPixelDrawMultiple(void *pvDisplayData,
+Template_DriverPixelDrawMultiple(
                                  int16_t lX,
                                  int16_t lY,
                                  int16_t lX0,
@@ -472,7 +643,7 @@ Template_DriverPixelDrawMultiple(void *pvDisplayData,
             for(; (lX0 < 8) && lCount; lX0++, lCount--)
             {
                 // Draw this pixel in the appropriate color
-                Template_DriverPixelDraw(pvDisplayData, lX++, lY,
+                ssd1306_drawPixel( lX++, lY,
                                          ((uint16_t *)pucPalette)[(ulByte >>
                                                  (7 -
                                                          lX0)) & 1]);
@@ -499,7 +670,7 @@ Template_DriverPixelDrawMultiple(void *pvDisplayData,
             for(; (lX0 < 4) && lCount; lX0++, lCount--)
             {
                 // Draw this pixel in the appropriate color
-                Template_DriverPixelDraw(pvDisplayData, lX++, lY,
+                ssd1306_drawPixel( lX++, lY,
                                          ((uint16_t *)pucPalette)[(ulByte >>
                                                  (6 -
                                                          (lX0 <<
@@ -534,7 +705,7 @@ Template_DriverPixelDrawMultiple(void *pvDisplayData,
                 ulByte = (*pucData >> 4);
                 ulByte = (*(uint16_t *)(pucPalette + ulByte));
                 // Write to LCD screen
-                Template_DriverPixelDraw(pvDisplayData, lX++, lY, ulByte);
+                ssd1306_drawPixel( lX++, lY, ulByte);
 
                 // Decrement the count of pixels to draw
                 lCount--;
@@ -549,7 +720,7 @@ Template_DriverPixelDrawMultiple(void *pvDisplayData,
             ulByte = (*pucData++ & 15);
             ulByte = (*(uint16_t *)(pucPalette + ulByte));
             // Write to LCD screen
-            Template_DriverPixelDraw(pvDisplayData, lX++, lY, ulByte);
+            ssd1306_drawPixel( lX++, lY, ulByte);
 
             // Decrement the count of pixels to draw
             lCount--;
@@ -572,7 +743,7 @@ Template_DriverPixelDrawMultiple(void *pvDisplayData,
             ulByte = *pucData++;
             ulByte = (*(uint16_t *)(pucPalette + ulByte));
             // Write to LCD screen
-            Template_DriverPixelDraw(pvDisplayData, lX++, lY, ulByte);
+            ssd1306_drawPixel(lX++, lY, ulByte);
         }
         // The image data has been drawn
         break;
@@ -613,7 +784,7 @@ Template_DriverLineDrawH(void *pvDisplayData,
 
     do
     {
-        Template_DriverPixelDraw(pvDisplayData, lX1, lY, ulValue);
+        ssd1306_drawPixel( lX1, lY, ulValue);
     }
     while(lX1++ < lX2);
 }
@@ -644,7 +815,7 @@ Template_DriverLineDrawV(void *pvDisplayData,
 {
     do
     {
-        Template_DriverPixelDraw(pvDisplayData, lX, lY1, ulValue);
+        ssd1306_drawPixel( lX, lY1, ulValue);
     }
     while(lY1++ < lY2);
 }
@@ -735,7 +906,7 @@ Template_DriverFlush(void *pvDisplayData)
     {
         for(j = 0; j < (LCD_X_SIZE * BPP + 7) / 8; j++)
         {
-            Template_DriverPixelDraw(pvDisplayData, j, i,
+            ssd1306_drawPixel( j, i,
                                      Template_Memory[i * LCD_Y_SIZE + j]);
         }
     }
@@ -772,26 +943,26 @@ Template_DriverClearScreen(void *pvDisplayData,
 //! The display structure that describes the driver for the blank template.
 //
 //*****************************************************************************
-const Graphics_Display g_sTemplate_Driver =
-{
- sizeof(tDisplay),
- Template_Memory,
-#if defined(PORTRAIT) || defined(PORTRAIT_FLIP)
- LCD_Y_SIZE,
- LCD_X_SIZE,
-#else
- LCD_X_SIZE,
- LCD_Y_SIZE,
-#endif
- Template_DriverPixelDraw,
- Template_DriverPixelDrawMultiple,
- Template_DriverLineDrawH,
- Template_DriverLineDrawV,
- Template_DriverRectFill,
- Template_DriverColorTranslate,
- Template_DriverFlush,
- Template_DriverClearScreen
-};
+//const Graphics_Display g_sTemplate_Driver =
+//{
+// sizeof(tDisplay),
+// Template_Memory,
+//#if defined(PORTRAIT) || defined(PORTRAIT_FLIP)
+// LCD_Y_SIZE,
+// LCD_X_SIZE,
+//#else
+// LCD_X_SIZE,
+// LCD_Y_SIZE,
+//#endif
+// ssd1306_DriverPixelDraw,
+// Template_DriverPixelDrawMultiple,
+// Template_DriverLineDrawH,
+// Template_DriverLineDrawV,
+// Template_DriverRectFill,
+// Template_DriverColorTranslate,
+// Template_DriverFlush,
+// Template_DriverClearScreen
+//};
 
 //*****************************************************************************
 //
