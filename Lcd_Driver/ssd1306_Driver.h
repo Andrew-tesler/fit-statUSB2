@@ -59,29 +59,29 @@
 
 uint8_t buffer[1024];
 
-   #define SSD1306_128_64
+#define SSD1306_128_64
 //   #define SSD1306_128_32
 //   #define SSD1306_96_16
 
 #if defined SSD1306_128_64 && defined SSD1306_128_32
-  #error "Only one SSD1306 display can be specified at once in SSD1306.h"
+#error "Only one SSD1306 display can be specified at once in SSD1306.h"
 #endif
 #if !defined SSD1306_128_64 && !defined SSD1306_128_32 && !defined SSD1306_96_16
-  #error "At least one SSD1306 display must be specified in SSD1306.h"
+#error "At least one SSD1306 display must be specified in SSD1306.h"
 #endif
 
 
 #if defined SSD1306_128_64
-  #define SSD1306_LCDWIDTH                  128
-  #define SSD1306_LCDHEIGHT                 64
+#define SSD1306_LCDWIDTH                  128
+#define SSD1306_LCDHEIGHT                 64
 #endif
 #if defined SSD1306_128_32
-  #define SSD1306_LCDWIDTH                  128
-  #define SSD1306_LCDHEIGHT                 32
+#define SSD1306_LCDWIDTH                  128
+#define SSD1306_LCDHEIGHT                 32
 #endif
 #if defined SSD1306_96_16
-  #define SSD1306_LCDWIDTH                  96
-  #define SSD1306_LCDHEIGHT                 16
+#define SSD1306_LCDWIDTH                  96
+#define SSD1306_LCDHEIGHT                 16
 #endif
 
 
@@ -132,7 +132,6 @@ uint8_t buffer[1024];
 #define SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL 0x2A
 
 
-
 // Number of pixels on LCD X-axis
 // TemplateDisplayFix
 #define LCD_X_SIZE      1
@@ -145,7 +144,7 @@ uint8_t buffer[1024];
 // TemplateDisplayFix
 #define BPP     1
 
-// Define LCD Screen Orientation Here
+// Define LCD Screen Orientation Here TODO Not working try to implement
 #define LANDSCAPE
 //#define LANDSCAPE_FLIP
 //#define PORTRAIT
@@ -192,7 +191,7 @@ uint8_t buffer[1024];
 //
 //*****************************************************************************
 #if !defined(PORTRAIT) && !defined(PORTRAIT_FLIP) && \
-    !defined(LANDSCAPE) && !defined(LANDSCAPE_FLIP)
+        !defined(LANDSCAPE) && !defined(LANDSCAPE_FLIP)
 #define LANDSCAPE
 #endif
 
@@ -234,7 +233,6 @@ uint8_t buffer[1024];
 /* All macros can go here. This is typically the color translation function (example below)
    and could also include Set_Address(), Write_Data(), etc. */
 
-//
 // Translates a 24-bit RGB color to a display driver-specific color.
 //
 // \param c is the 24-bit RGB color.  The least-significant byte is the blue
@@ -252,15 +250,15 @@ uint8_t buffer[1024];
 // TemplateDisplayFix
 
 #define DPYCOLORTRANSLATE(c)    ((((c) & 0x00f80000) >> 8) |               \
-                                 (((c) & 0x0000fc00) >> 5) |               \
-                                 (((c) & 0x000000f8) >> 3))
+        (((c) & 0x0000fc00) >> 5) |               \
+        (((c) & 0x000000f8) >> 3))
 
 //*****************************************************************************
 //
 // Prototypes for the globals exported by this driver.
 //
 //*****************************************************************************
-extern void Template_DriverInit(void);
+extern void ssd1306_DriverInit(void);
 extern const Graphics_Display g_sTemplate_Driver;
 extern uint8_t Template_Memory[];
 

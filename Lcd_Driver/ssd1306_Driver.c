@@ -29,51 +29,26 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
-//*****************************************************************************
-//
-// Template_Driver.c - Display driver for any LCD Controller. This file serves as
-//						a template for creating new LCD driver files
-//
-//*****************************************************************************
-//
-//! \addtogroup display_api
-//! @{
-//
-//*****************************************************************************
 
-//*****************************************************************************
-//
-// READ ME
-//
-// This template driver is intended to be modified for creating new LCD drivers
-// It is setup so that only Template_DriverPixelDraw() and DPYCOLORTRANSLATE()
-// and some LCD size configuration settings in the header file Template_Driver.h
-// are REQUIRED to be written. These functions are marked with the string
-// "TemplateDisplayFix" in the comments so that a search through Template_Driver.c and
-// Template_Driver.h can quickly identify the necessary areas of change.
-//
-// Template_DriverPixelDraw() is the base function to write to the LCD
-// display. Functions like WriteData(), WriteCommand(), and SetAddress()
-// are suggested to be used to help implement the Template_DriverPixelDraw()
-// function, but are not required. SetAddress() should be used by other pixel
-// level functions to help optimize them.
-//
-// This is not an optimized driver however and will significantly impact
-// performance. It is highly recommended to first get the prototypes working
-// with the single pixel writes, and then go back and optimize the driver.
-// Please see application note www.ti.com/lit/pdf/slaa548 for more information
-// on how to fully optimize LCD driver files. In short, driver optimizations
-// should take advantage of the auto-incrementing of the LCD controller.
-// This should be utilized so that a loop of WriteData() can be used instead
-// of a loop of Template_DriverPixelDraw(). The pixel draw loop contains both a
-// SetAddress() + WriteData() compared to WriteData() alone. This is a big time
-// saver especially for the line draws and Template_DriverPixelDrawMultiple.
-// More optimization can be done by reducing function calls by writing macros,
-// eliminating unnecessary instructions, and of course taking advantage of other
-// features offered by the LCD controller. With so many pixels on an LCD screen
-// each instruction can have a large impact on total drawing time.
-//
-//*****************************************************************************
+/**********************************************************
+ * NAME: ssd1306_Driver.c
+ *
+ *
+ * PURPOSE: Main define and global virables for the file
+ *
+ *
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 27/11/2018  Andrew T.     0.1.0     initial Release
+ *
+ * *
+ *******************************************************************/
 
 //*****************************************************************************
 //
@@ -161,7 +136,7 @@ InitLCDDisplayBuffer(uint32_t ulValue)
 //
 // TemplateDisplayFix
 void
-Template_DriverInit(void)
+ssd1306_DriverInit(void)
 {
     uint16_t vccstate = 0x00;
     // Init sequence
@@ -229,6 +204,9 @@ Template_DriverInit(void)
 
 }
 
+// Send command to the display
+// Command structure is : control signal(0x00), The command itself(c)
+// The issue command to SPI to stop transmission
 void ssd1306_command(uint8_t c) {
 
     uint8_t control = 0x00;
@@ -261,10 +239,8 @@ void ssd1306_drawPixel(int16_t x, int16_t y, uint16_t color) {
     case BLACK:   buffer[x+ (y/8)*SSD1306_LCDWIDTH] &= ~(1 << (y&7)); break;
     case INVERSE: buffer[x+ (y/8)*SSD1306_LCDWIDTH] ^=  (1 << (y&7)); break;
     }
-
-
-
 }
+
 
 void ssd1306_display(uint8_t array[]) {
 
@@ -351,13 +327,12 @@ void ssd1306_dim(uint8_t num) {
     uint8_t contrast;
     contrast = num;
 
-
-
   // the range of contrast to too small to be really useful
   // it is useful to dim the display
   ssd1306_command(SSD1306_SETCONTRAST);
   ssd1306_command(contrast);
 }
+
 
 void ssd1306_invertDisplay(uint8_t i) {
   if (i==1) {
