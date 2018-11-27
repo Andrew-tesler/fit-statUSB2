@@ -135,14 +135,18 @@ void USBHAL_initPorts(void)
 
     // Board specific GPIO defines
 #if defined LAUNCH_PAD
+
+    // Crystal
     // X2OUT-P5.3, XT2IN-5.2. Soldered on board XTAL
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P5,GPIO_PIN3 + GPIO_PIN2);
     // XIN-P5.4, XOUT-P5.5. Soldered on board LFXTAL
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P5,GPIO_PIN4 + GPIO_PIN5);
 
+    // I2C
     //Assign I2C pins to USCI_B0 and set the alternative function for them
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,GPIO_PIN0 + GPIO_PIN1);
 
+    // LED
     // Set the Board Left LED to Output, Placed here as this LEDS will greatly change in the final board
     GPIO_setAsOutputPin(RED_LED_PORT,RED_LED_PIN);
     GPIO_setOutputHighOnPin(RED_LED_PORT,RED_LED_PIN);
