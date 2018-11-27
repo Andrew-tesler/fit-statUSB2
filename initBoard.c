@@ -163,6 +163,9 @@ void USBHAL_initPorts(void)
     // Set the Right button on the lunch pad as input high
     GPIO_setAsInputPinWithPullUpResistor(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);
 
+    // Set the RGB LED GPIO to alternative function to power the LEDS directly from timer
+    GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);
+
 
 
 
