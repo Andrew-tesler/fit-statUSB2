@@ -133,10 +133,13 @@ void main(void)
 
     __enable_interrupt();  // Enable interrupts globally
 
-    ssd1306_display(logo);                                                                              // Print the logo to the LCD
-    ssd1306_startscrollright(0x00,0xFF);                                                                // Start Scroll Command
+    //ssd1306_display(logo);                                                                              // Print the logo to the LCD
+    //ssd1306_startscrollright(0x00,0xFF);                                                                // Start Scroll Command
 //    ssd1306_invertDisplay(1);
 
+//    ssd1306_DriverPixelDrawMultiple(10, 10, 50, 50);
+    ssd1306_drawPixel(10, 10, 1);
+    ssd1306_display(buffer);
     strncat(deviceSN,(char *)SERIAL_ptrB,10);                                                           // Read the SN stored in internal flash and store(writed by the ATP)
     strcat(deviceSN,"\r\n\r\n");
     fadeTimer = 300;                                                                                    // Default timer 300ms

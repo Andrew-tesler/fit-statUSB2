@@ -375,142 +375,30 @@ void ssd1306_invertDisplay(uint8_t i) {
 //! \return None.
 //
 //*****************************************************************************
-void ssd1306_DriverPixelDrawMultiple(
-                                 int16_t lX,
-                                 int16_t lY,
-                                 int16_t lX0,
-                                 int16_t lCount,
-                                 int16_t lBPP,
-                                 const uint8_t *pucData,
-                                 const uint32_t *pucPalette)
+void ssd1306_DriverPixelDrawMultiple(int16_t lX, int16_t lY, int16_t lX0,int16_t lCount)
 {
     uint16_t ulByte;
 
-    //
-    // Determine how to interpret the pixel data based on the number of bits
-    // per pixel.
-    //
-    switch(lBPP)
-    {
-    // The pixel data is in 1 bit per pixel format
-    case 1:
-    {
-        // Loop while there are more pixels to draw
-        while(lCount > 0)
-        {
-            // Get the next byte of image data
-            ulByte = *pucData++;
-
-            // Loop through the pixels in this byte of image data
-            for(; (lX0 < 8) && lCount; lX0++, lCount--)
+    while(lCount > 0)
             {
-                // Draw this pixel in the appropriate color
-                ssd1306_drawPixel( lX++, lY,
-                                         ((uint16_t *)buffer)[(ulByte >>
-                                                 (7 -
-                                                         lX0)) & 1]);
-            }
+                // Get the next byte of image data
+                //ulByte = *pucData++;
 
-            // Start at the beginning of the next byte of image data
-            lX0 = 0;
-        }
-        // The image data has been drawn
-
-        break;
-    }
-
-    // The pixel data is in 2 bit per pixel format
-    case 2:
-    {
-        // Loop while there are more pixels to draw
-        while(lCount > 0)
-        {
-            // Get the next byte of image data
-            ulByte = *pucData++;
-
-            // Loop through the pixels in this byte of image data
-            for(; (lX0 < 4) && lCount; lX0++, lCount--)
-            {
-                // Draw this pixel in the appropriate color
-                ssd1306_drawPixel( lX++, lY,
-                                         ((uint16_t *)pucPalette)[(ulByte >>
-                                                 (6 -
-                                                         (lX0 <<
-                                                                 1))) & 3]);
-            }
-
-            // Start at the beginning of the next byte of image data
-            lX0 = 0;
-        }
-        // The image data has been drawn
-
-        break;
-    }
-    // The pixel data is in 4 bit per pixel format
-    case 4:
-    {
-        // Loop while there are more pixels to draw.  "Duff's device" is
-        // used to jump into the middle of the loop if the first nibble of
-        // the pixel data should not be used.  Duff's device makes use of
-        // the fact that a case statement is legal anywhere within a
-        // sub-block of a switch statement.  See
-        // http://en.wikipedia.org/wiki/Duff's_device for detailed
-        // information about Duff's device.
-        switch(lX0 & 1)
-        {
-        case 0:
-
-            while(lCount)
-            {
-                // Get the upper nibble of the next byte of pixel data
-                // and extract the corresponding entry from the palette
-                ulByte = (*pucData >> 4);
-                ulByte = (*(uint16_t *)(pucPalette + ulByte));
-                // Write to LCD screen
-                ssd1306_drawPixel( lX++, lY, ulByte);
-
-                // Decrement the count of pixels to draw
-                lCount--;
-
-                // See if there is another pixel to draw
-                if(lCount)
+                // Loop through the pixels in this byte of image data
+                for(; (lX0 < 8) && lCount; lX0++, lCount--)
                 {
-        case 1:
-            // Get the lower nibble of the next byte of pixel
-            // data and extract the corresponding entry from
-            // the palette
-            ulByte = (*pucData++ & 15);
-            ulByte = (*(uint16_t *)(pucPalette + ulByte));
-            // Write to LCD screen
-            ssd1306_drawPixel( lX++, lY, ulByte);
-
-            // Decrement the count of pixels to draw
-            lCount--;
+                    // Draw this pixel in the appropriate color
+                    ssd1306_drawPixel( lX++, lY,
+                                             ((uint16_t *)buffer)[(ulByte >>
+                                                     (7 -
+                                                             lX0)) & 1]);
                 }
+
+                // Start at the beginning of the next byte of image data
+                lX0 = 0;
             }
-        }
-        // The image data has been drawn.
 
-        break;
-    }
 
-    // The pixel data is in 8 bit per pixel format
-    case 8:
-    {
-        // Loop while there are more pixels to draw
-        while(lCount--)
-        {
-            // Get the next byte of pixel data and extract the
-            // corresponding entry from the palette
-            ulByte = *pucData++;
-            ulByte = (*(uint16_t *)(pucPalette + ulByte));
-            // Write to LCD screen
-            ssd1306_drawPixel(lX++, lY, ulByte);
-        }
-        // The image data has been drawn
-        break;
-    }
-    }
 }
 //*****************************************************************************
 //

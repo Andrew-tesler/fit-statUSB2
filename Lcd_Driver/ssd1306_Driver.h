@@ -281,7 +281,7 @@ void ssd1306_dim(uint8_t);
 
 void ssd1306_invertDisplay(uint8_t);
 
-//void ssd1306_DriverPixelDrawMultiple(int16_t,int16_t, int16_t, int16_t, int16_t ,  uint8_t*, uint32_t*);
+void ssd1306_DriverPixelDrawMultiple(int16_t,int16_t, int16_t, int16_t);
 
 //void ssd1306_DriverPixelDraw(int16_t ,int16_t ,uint16_t);
 
