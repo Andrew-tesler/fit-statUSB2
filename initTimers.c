@@ -1,67 +1,101 @@
+/* --COPYRIGHT--,BSD
+ * Copyright (c) 2016, Texas Instruments Incorporated
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * --/COPYRIGHT--*/
+/**********************************************************
+ * NAME: initTimers.c
+ *
+ * PURPOSE: Initialize the Timers,
+ *
+ * GLOBAL VARIABLES:
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 27/08/2018   Andrew T.   0.1.0    initial Release
+ * *
+ * *
+ *******************************************************************/
 
 
-//***** Header Files **********************************************************
+//*****************************************************************************************************
+//
+//  INCLUDE
+//
+//*****************************************************************************************************
 #include <driverlib.h>
 #include <initBoard.h>
 #include "initTimers.h"
 #include "defines.c"
 
-
-//char timer = 0x00;
-//int direction = 0;                                                                      // Direction of the fade
+//*****************************************************************************************************
 //
-//unsigned int timerBcounter[3];                                                          // Counter for each of the colors
+//  Local variables for the timers
 //
-int justCounter;                                                            // Counter for the for loop
-int smallerCounter;                                                         // Counter for the dor loop used for RGB iterration
-int colorsNumber;                                                           // Number of colors transition
-//
-//int colorCounter[MAX_SEQ_COLORS][3];                                          // Counter for fade logic
+//*****************************************************************************************************
+int justCounter;                                                                                        // Counter for the for loop
+int smallerCounter;                                                                                     // Counter for the for loop used for RGB iteration
+int colorsNumber;                                                                                       // Number of colors transition
+int test;                                                                                               // Test int // TODO Check if can be removed
+int fadeArrayLocation;                                                                                  // Location in fadeArrayDiff array
 
-int test;
-int fadeArrayLocation;                                                      // Location in fadeArrayDiff array
-//uint8_t fadeArrayDirection;                                                     // Probably not needed
-// Counter Tick for fade logic
-//uint8_t fadeDirection[3];                                                               // Direction of LED to fade
-
-//uint8_t timerTick = 0;
-//uint16_t fadeTick = 0;              // Fade tick - Temp Value for the timer function, Each clock increment increments this value
-//uint16_t fadeTickGlobal=5000;       // fadeTickGlobal - Global time from color transition from one color to another in ms
-//uint16_t fadeTime = 0;              // Fade time - calculated value from the global time needed and the steps to transition
-//uint8_t fadeColorStep = 255;          // Steps for transition to the next desired color
-// Fade time between each fade intervals TODO Will need to use with color differential number
-//Total time of fade from one color to another
-
+// Init the timers for RGB Led
 void initTimers(int red,int green,int blue) {
 
-    uint8_t Red,Green,Blue;                                                     // Initialize RGB Int's
-    GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);// Set the RGB LED GPIO to alternative function to power the LEDS directly from timer
+    uint8_t Red,Green,Blue;                                                                             // Initialize local variables for the RGB
+
+    // Check for Correct color numbers and pass only them
+    // Need to check why the else is setting alterantive function for the GPIO
     // Test for value correctness
-    if (red > 0 & red <= 255){                                                  // Check for Correct color numbers and pass only them
+    if (red > 0 & red <= 255){
         Red = red;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_R);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_R);                                    // Set the Pin to input thus powering off the LED
     }
     if (green > 0 & green <= 255){
         Green = green;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_G);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_G);                                    // Set the Pin to input thus powering off the LED
     }
     if (blue > 0 & blue <= 255){
         Blue = blue;
     }
     else {
-        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_B);
+        GPIO_setAsPeripheralModuleFunctionInputPin(LED_PORT, LED_B);                                    // Set the Pin to input thus powering off the LED
     }
-
-    //    if (Red <= 0) {                                                             // Fix the LED red Powering ON when not in use
-    //        GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, LED_R);     // Input power off the RED led
-    //    }
-
-
-
 
 
     Timer_A_initUpModeParam initParam2 = {0};
@@ -77,60 +111,42 @@ void initTimers(int red,int green,int blue) {
 
     Timer_A_initUpMode(TIMER_A0_BASE,&initParam2);
 
-    // Green
+    // Red
     Timer_A_initCompareModeParam initCompareParamcc1 = {0};
     initCompareParamcc1.compareRegister         = TIMER_A_CAPTURECOMPARE_REGISTER_1;
     initCompareParamcc1.compareInterruptEnable  = TIMER_A_CAPTURECOMPARE_INTERRUPT_DISABLE;
-#ifdef ARDUMSP
-    initCompareParamcc1.compareOutputMode       = TIMER_A_OUTPUTMODE_TOGGLE_SET;
-#else
     initCompareParamcc1.compareOutputMode       = TIMER_A_OUTPUTMODE_SET_RESET;
-#endif //ARDUMSP
-    //        initCompareParamcc1.compareOutputMode       = TIMER_A_OUTPUTMODE_TOGGLE_SET;    // ARDUMSP
-    //    initCompareParamcc1.compareOutputMode       = TIMER_A_OUTPUTMODE_SET_RESET;     // FITSTATUSB
     initCompareParamcc1.compareValue            = Red;
-    //
+
     // Blue
     Timer_A_initCompareModeParam initCompareParamcc2 = {0};
     initCompareParamcc2.compareRegister         = TIMER_A_CAPTURECOMPARE_REGISTER_2;
     initCompareParamcc2.compareInterruptEnable  = TIMER_A_CAPTURECOMPARE_INTERRUPT_DISABLE;
-#ifdef ARDUMSP
-    initCompareParamcc2.compareOutputMode       = TIMER_A_OUTPUTMODE_TOGGLE_SET;
-#else
     initCompareParamcc2.compareOutputMode       = TIMER_A_OUTPUTMODE_SET_RESET;
-#endif //ARDUMSP
-    //        initCompareParamcc2.compareOutputMode       = TIMER_A_OUTPUTMODE_TOGGLE_SET;    // ARDUMSP
-    //    initCompareParamcc2.compareOutputMode       = TIMER_A_OUTPUTMODE_SET_RESET;     // FITSTATUSB
     initCompareParamcc2.compareValue            = Blue;
 
-    // Red
+    // Green
     Timer_A_initCompareModeParam initCompareParamcc3 = {0};
     initCompareParamcc3.compareRegister         = TIMER_A_CAPTURECOMPARE_REGISTER_3;
     initCompareParamcc3.compareInterruptEnable  = TIMER_A_CAPTURECOMPARE_INTERRUPT_DISABLE;
-#ifdef ARDUMSP
-    initCompareParamcc3.compareOutputMode       = TIMER_A_OUTPUTMODE_TOGGLE_SET;
-#else
     initCompareParamcc3.compareOutputMode       = TIMER_A_OUTPUTMODE_SET_RESET;
-#endif //ARDUMSP
-    //        initCompareParamcc3.compareOutputMode       = TIMER_A_OUTPUTMODE_TOGGLE_SET;    // ARDUMSP
-    //    initCompareParamcc3.compareOutputMode       = TIMER_A_OUTPUTMODE_SET_RESET;     // FITSTATUSB
     initCompareParamcc3.compareValue            = Green;
-    //
+
+    // Init The timers
     Timer_A_initCompareMode(TIMER_A0_BASE, &initCompareParamcc1);
     Timer_A_initCompareMode(TIMER_A0_BASE, &initCompareParamcc2);
     Timer_A_initCompareMode(TIMER_A0_BASE, &initCompareParamcc3);
-    //
+
 
     Timer_A_clearTimerInterrupt( TIMER_A0_BASE );                                    // Clear TAxIFG
 
-    //    GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);
-    //Initiaze compare mode
+    //Initiate compare mode
     Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_1 + TIMER_A_CAPTURECOMPARE_REGISTER_2 + TIMER_A_CAPTURECOMPARE_REGISTER_3);
 
-    //Timer_A_disableInterrupt(TIMER_A0_BASE);
-
+    // Start Timer A counter
     Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);
 }
+
 
 // Fade the leds from given color to given color by the time given
 void initfadeClock() {
@@ -171,67 +187,29 @@ void initFade(uint8_t colorNum) {
     currentRGBColor[0] = colorSeq[0][0];
     currentRGBColor[1] = colorSeq[0][1];
     currentRGBColor[2] = colorSeq[0][2];
-    //    colorFadeTimer = 0;
-
-    // Debug
-    //colorFadeTimer[0] = 1000;
-    //    colorFadeTimer[1] = 200;;
-    //    colorFadeTimer[2] = 3000;
-    //    colorFadeTimer[3] = 20;
-
-
 
     for (justCounter = 0 ; justCounter < colorsNumber-1 ; justCounter++) {                                                                    // The last run of the loop calculates the time from the last element to first element
         for (smallerCounter = 0 ; smallerCounter < 3 ; smallerCounter++) {                                                                  // Each R,G,B color calculation
-
-
-            //            colorFadeDiff[justCounter][smallerCounter] = (colorSeq[justCounter+1][smallerCounter] - colorSeq[justCounter][smallerCounter]) / colorFadeTimer[justCounter];
             colorFadeDiff[justCounter][smallerCounter] = (colorSeq[justCounter+1][smallerCounter] - colorSeq[justCounter][smallerCounter]);
         }
     }
     // Calculate the last transition
     for (smallerCounter = 0 ; smallerCounter < 3 ; smallerCounter++) {
-
-        //        colorFadeDiff[colorsNumber-1][smallerCounter] = (colorSeq[0][smallerCounter] - colorSeq[colorsNumber-1][smallerCounter]) / colorFadeTimer[colorsNumber-1];
         colorFadeDiff[colorsNumber-1][smallerCounter] = (colorSeq[0][smallerCounter] - colorSeq[colorsNumber-1][smallerCounter]);
     }
     initfadeClock();                                                                                                                        // Start Timer_B0
 }
 
+
 // Function to be called by TIMER0_B0 that will update the current color according to calculated values
+// Stop the timers and run the init timers again with the updated values
 void updateFadeColor(){
     Timer_A_stop(TIMER_A0_BASE);// Stop Timer
-
-
-    //    switch (direction) {
-    //    case 0: {
-    //        currentRGBColor[0] =   currentRGBColor[0] + colorFadeDiff[fadeArrayLocation][0];
-    //        currentRGBColor[1] =   currentRGBColor[1] + colorFadeDiff[fadeArrayLocation][1];
-    //        currentRGBColor[2] =   currentRGBColor[2] + colorFadeDiff[fadeArrayLocation][2];
-    //        break;
-    //    }
-    //
-    //    case 1: {
-    //        currentRGBColor[0] =   currentRGBColor[0] - colorFadeDiff[fadeArrayLocation][0];
-    //        currentRGBColor[1] =   currentRGBColor[1] - colorFadeDiff[fadeArrayLocation][1];
-    //        currentRGBColor[2] =   currentRGBColor[2] - colorFadeDiff[fadeArrayLocation][2];
-    //        break;
-    //    }
-    //    }
-
-
-    //    currentRGBColor[0] =   currentRGBColor[0] + colorFadeDiff[fadeArrayLocation][0];
-    //    currentRGBColor[1] =   currentRGBColor[1] + colorFadeDiff[fadeArrayLocation][1];
-    //    currentRGBColor[2] =   currentRGBColor[2] + colorFadeDiff[fadeArrayLocation][2];
-    //    currentRGBColor[0] =   currentRGBColor[0] + colorFadeDiff[fadeArrayLocation][0];
-    //    currentRGBColor[1] =   currentRGBColor[1] + colorFadeDiff[fadeArrayLocation][1];
-    //    currentRGBColor[2] =   currentRGBColor[2] + colorFadeDiff[fadeArrayLocation][2];
-
-
     initTimers(currentRGBColor[0],currentRGBColor[1],currentRGBColor[2]);
 
 
 }
+
 //*****************************************************************************
 // Interrupt Service Routine
 //*****************************************************************************
@@ -240,17 +218,7 @@ void updateFadeColor(){
 __interrupt void timer_ISRB0 (void) {
     // the timer should run and update the PWM clock(TIMERA0) if any change needed
     // Because of several fade values present the script will also need to iterate on the array of colors
-
-
-    // colorFadeDiff -- Fade diff array location
-    // colorLocation -- Color location in each of the fade diff array colors
-    // direction     -- Direction of the fade   // colorsNumber  -- Total number of array size of fade diff
-
-    //colorLocation++;
-
-    //    currentRGBColor[0] =   ((colorLocation * colorFadeDiff[fadeArrayLocation][0]) /  colorFadeTimer[fadeArrayLocation]) + colorSeq[fadeArrayLocation][0];
-    //    currentRGBColor[1] =   ((colorLocation * colorFadeDiff[fadeArrayLocation][1]) /  colorFadeTimer[fadeArrayLocation]) + colorSeq[fadeArrayLocation][1];
-    //    currentRGBColor[2] =   ((colorLocation * colorFadeDiff[fadeArrayLocation][2]) /  colorFadeTimer[fadeArrayLocation]) + colorSeq[fadeArrayLocation][2];
+    currentRGBColor[2] =   ((colorLocation * colorFadeDiff[fadeArrayLocation][2]) /  colorFadeTimer[fadeArrayLocation]) + colorSeq[fadeArrayLocation][2];
 
     colorLocation++;
 
@@ -259,15 +227,9 @@ __interrupt void timer_ISRB0 (void) {
         currentRGBColor[1] =   (((colorLocation-colorFadeTimer[fadeArrayLocation]) * colorFadeDiff[fadeArrayLocation][1]) /  fadeTimer) + colorSeq[fadeArrayLocation][1];
         currentRGBColor[2] =   (((colorLocation-colorFadeTimer[fadeArrayLocation]) * colorFadeDiff[fadeArrayLocation][2]) /  fadeTimer) + colorSeq[fadeArrayLocation][2];
     }
-
-
+    // Update fade color
     updateFadeColor();
 
-
-
-
-    //
-    //
     if (colorLocation >= colorFadeTimer[fadeArrayLocation]+ fadeTimer){   // Test if the array of the color reached its limits
         //
         if (disableDirection == 1) {
@@ -281,43 +243,8 @@ __interrupt void timer_ISRB0 (void) {
         else if (fadeArrayLocation < colorsNumber-1){
             fadeArrayLocation++;
         }
-        //        //        fadeArrayLocation++;
-        //        //        fadeArrayLocation %= colorsNumber; // return fadeArraylocation to zero if reached colorsNumber
-        //
         colorLocation=0;
 
-
-        //        switch (direction) {
-        //
-        //        case 0: {   // Move forward
-        //            if (fadeArrayLocation == colorsNumber-2) {
-        //                direction = !direction;
-        //                //colorLocation=0;
-        //            }
-        //            else if (fadeArrayLocation < colorsNumber-2){
-        //                fadeArrayLocation++;
-        //            }
-        //
-        //            colorLocation=0;
-        //            break;
-        //        }
-        //        case 1: {  // Move backward
-        //            if (fadeArrayLocation == 0) {
-        //                direction = !direction;
-        //                //colorLocation=0;
-        //            }
-        //            else if (fadeArrayLocation > 0) {
-        //                fadeArrayLocation--;
-        //            }
-        //            colorLocation=0;
-        //            break;
-        //        }
-        //
-        //        }
-
     }
-
-
-
     Timer_B_clearCaptureCompareInterrupt(TIMER_B0_BASE, TIMER_B_CAPTURECOMPARE_REGISTER_0);
 }

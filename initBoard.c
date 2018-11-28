@@ -29,39 +29,48 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
-/*
- * ======== hal.c ========
+/**********************************************************
+ * NAME: initBoard.c
  *
- */
-#include <defines.c>
-#include <initBoard.h>
-#include "msp430.h"
+ * PURPOSE: Collect all functions that initialize the board to init state
+ *
+ * GLOBAL VARIABLES:
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 26/08/2018   Andrew T.   0.1.0    initial Release
+ * *
+ * *
+ *******************************************************************/
 
-#include "driverlib.h"
+//*****************************************************************************************************
+//
+//  INCLUDE
+//
+//*****************************************************************************************************
+#include <defines.c>                                                                                    // Define file
+#include <initBoard.h>                                                                                  // Header file of the initboard
+#include "msp430.h"                                                                                     // Ti MSP430 header file
+#include "driverlib.h"                                                                                  // Ti Driver library file
+#include "USB_API/USB_Common/device.h"                                                                  // Ti USB deice init file
+#include "USB_config/descriptors.h"                                                                     // Ti USB descriptor file
 
-#include "USB_API/USB_Common/device.h"
-#include "USB_config/descriptors.h"
 
 #if defined LAUNCH_PAD
-    #define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                    // 32KHz
-    #define HF_CRYSTAL_FREQUENCY_IN_HZ     4000000                                  // 12MHz // Launch pad
+    #define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                                        // 32KHz
+    #define HF_CRYSTAL_FREQUENCY_IN_HZ     4000000                                                      // 4MHz
+    #define MCLK_DESIRED_FREQUENCY_IN_KHZ  12000                                                        // 12MHz
+    #define MCLK_FLLREF_RATIO              MCLK_DESIRED_FREQUENCY_IN_KHZ / ( UCS_REFOCLK_FREQUENCY / 1024 )    // Ratio = 250
+
+#elif defined FITSTATUSB2_V1
+    #error "initBoard.c - Write correct defines for clock" // TODO
 #endif
 
-//#define LF_CRYSTAL_FREQUENCY_IN_HZ     32768                                    // 32KHz
-//#define HF_CRYSTAL_FREQUENCY_IN_HZ     12000000                                  // 12MHz
-//#define HF_CRYSTAL_FREQUENCY_IN_HZ     4000000                                  // 12MHz // Launch pad
-
-#define MCLK_DESIRED_FREQUENCY_IN_KHZ  12000                                     // 26MHz
-#define MCLK_FLLREF_RATIO              MCLK_DESIRED_FREQUENCY_IN_KHZ / ( UCS_REFOCLK_FREQUENCY / 1024 )    // Ratio = 250
-
-
-
-//#define GPIO_ALL  GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
-//        GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
-
-uint32_t myACLK;
-uint32_t mySMCLK;
-uint32_t myMCLK;
 
 /*
  * This function drives all the I/O's as output-low, to avoid floating inputs
@@ -123,12 +132,47 @@ void USBHAL_initPorts(void)
     GPIO_setAsOutputPin(GPIO_PORT_PJ, GPIO_ALL);
 #endif
 
-    GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_ALL);
+
+    // Board specific GPIO defines
+#if defined LAUNCH_PAD
+
+    // Crystal
+    // X2OUT-P5.3, XT2IN-5.2. Soldered on board XTAL
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P5,GPIO_PIN3 + GPIO_PIN2);
+    // XIN-P5.4, XOUT-P5.5. Soldered on board LFXTAL
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P5,GPIO_PIN4 + GPIO_PIN5);
+
+    // I2C
+    //Assign I2C pins to USCI_B0 and set the alternative function for them
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,GPIO_PIN0 + GPIO_PIN1);
+
+    // LED
+    // Set the Board Left LED to Output, Placed here as this LEDS will greatly change in the final board
+    GPIO_setAsOutputPin(RED_LED_PORT,RED_LED_PIN);
+    GPIO_setOutputHighOnPin(RED_LED_PORT,RED_LED_PIN);
+    // Set the board Right Green LED to output High
+    GPIO_setAsOutputPin(GREEN_LED_PORT,GREEN_LED_PIN);
+    GPIO_setOutputHighOnPin(GREEN_LED_PORT,GREEN_LED_PIN);
+
+#elif defined FITSTATUSB2_V1
+    #error "initBoard.c - Write correct defines for GPIO"
+    // TODO - XTAL Pins
+    // TODO - I2C pins
+    // TODO - buttons
+#endif
+
+    // Set the left button on the lunch pad as input high
+    GPIO_setAsInputPinWithPullUpResistor(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);
+
+    // Set the Right button on the lunch pad as input high
+    GPIO_setAsInputPinWithPullUpResistor(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);
+
+    // Set the RGB LED GPIO to alternative function to power the LEDS directly from timer
+    GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);
 
 
-    // Init GPIO alternative function directly from timer
-//    GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);// Set the RGB LED GPIO to alternative function to power the LEDS directly from timer
+
+
 
 }
 
@@ -137,123 +181,53 @@ void USBHAL_initClocks(uint32_t mclkFreq)
 {
 
 #if defined LAUNCH_PAD
-    // Defined Clocks
-#else
-    #error "Validate clock and add if statement"
+    // Initiate the HFXTAL
+    UCS_turnOnXT2( UCS_XT2_DRIVE_8MHZ_16MHZ );
+    // Initiate the LFXTAL
+    UCS_turnOnLFXT1(UCS_XCAP_0,UCS_XT1_DRIVE_0);
+    // Set the frequency to the external xtal
+    UCS_setExternalClockSource( LF_CRYSTAL_FREQUENCY_IN_HZ,HF_CRYSTAL_FREQUENCY_IN_HZ);
+
+    // Set the fll reference as the XT1 CLK
+    UCS_initClockSignal(UCS_FLLREF,UCS_XT1CLK_SELECT,UCS_CLOCK_DIVIDER_1);
+    // Select XT2 as oscillator source for SMCLK with divider 2
+    UCS_initClockSignal(UCS_SMCLK,UCS_XT2CLK_SELECT,UCS_CLOCK_DIVIDER_2);
+    // Select XT2 as oscillator source for the MCLK
+    UCS_initClockSignal(UCS_MCLK,UCS_XT2CLK_SELECT,UCS_CLOCK_DIVIDER_1);
+
+#elif defined FITSTATUSB2_V1
+    #error "initBoard.c - Write correct defines Clock"
+    // TODO - Clock
+
 #endif
 
+
+    // Store Clock freq for debugging
     myACLK = UCS_getACLK();
     mySMCLK =  UCS_getSMCLK();
     myMCLK = UCS_getMCLK();
-
+    // Needed for setting break point
     __no_operation();
-
-    // Crystal Alternative function pins
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-            GPIO_PORT_P5,                                // XIN  on P5.4
-            GPIO_PIN3 +                                  // XT2OUT on P5.3
-            GPIO_PIN2                                    // XT2IN  on P5.2
-    );
-
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-            GPIO_PORT_P5,
-            GPIO_PIN4 +                                  // XIN on P5.4
-            GPIO_PIN5                                    // XOUT  on P5.5
-    );
-
-
-    //       PMM_setVCore( PMM_CORE_LEVEL_3 );
-
-    UCS_turnOnXT2( UCS_XT2_DRIVE_8MHZ_16MHZ );
-
-    UCS_turnOnLFXT1(UCS_XCAP_0,UCS_XT1_DRIVE_0);
-
-    UCS_setExternalClockSource(
-            LF_CRYSTAL_FREQUENCY_IN_HZ,                                         // XT1CLK input
-            HF_CRYSTAL_FREQUENCY_IN_HZ                                          // XT2CLK input
-    );
-
-
-
-    UCS_initClockSignal(
-            UCS_FLLREF,
-            UCS_REFOCLK_SELECT,
-            UCS_CLOCK_DIVIDER_1);
-
-    // Select XT2 as oscillator source for SMCLK
-    UCS_initClockSignal(
-            UCS_SMCLK,                                   // Clock you're configuring
-            UCS_XT2CLK_SELECT,                           // Clock source
-            UCS_CLOCK_DIVIDER_2                          // Divide down clock source by this much
-    );
-
-    UCS_initClockSignal(
-            UCS_MCLK,
-            UCS_XT2CLK_SELECT,
-            UCS_CLOCK_DIVIDER_1
-    );
-
-
-    UCS_initClockSignal(
-            UCS_ACLK,
-            UCS_XT1CLK_SELECT,
-            UCS_CLOCK_DIVIDER_1);
-
-    //       UCS_initFLLSettle(
-    //               mclkFreq/1000,
-    //               mclkFreq/32768);
-
-
-    myACLK = UCS_getACLK();
-    mySMCLK =  UCS_getSMCLK();
-    myMCLK = UCS_getMCLK();
-
-    __no_operation();
-    //    UCS_initClockSignal(
-    //            UCS_FLLREF,
-    //            UCS_REFOCLK_SELECT,
-    //            UCS_CLOCK_DIVIDER_1);
-    //
-    //    UCS_initClockSignal(
-    //            UCS_ACLK,
-    //            UCS_REFOCLK_SELECT,
-    //            UCS_CLOCK_DIVIDER_1);
-    //
-    //    UCS_initFLLSettle(
-    //            mclkFreq/1000,
-    //            mclkFreq/32768);
-
 }
 
 /*
- * Init I2C device for the LCD device
+ * Init I2C As master for controlling the LCD
+ *
  */
 void initI2C() {
-    //Assign I2C pins to USCI_B0
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-            GPIO_PORT_P3,
-            GPIO_PIN0 + GPIO_PIN1
-    );
 
     //Initialize Master
     USCI_B_I2C_initMasterParam param = {0};
-    param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;
-    param.i2cClk = UCS_getSMCLK();
-    param.dataRate = USCI_B_I2C_SET_DATA_RATE_400KBPS;
-    USCI_B_I2C_initMaster(USCI_B0_BASE, &param);
 
-    //Specify slave address
-    USCI_B_I2C_setSlaveAddress(USCI_B0_BASE,
-                               SLAVE_ADDRESS
-    );
+    param.selectClockSource = USCI_B_I2C_CLOCKSOURCE_SMCLK;                                             // Set SMCLK as SPI Clock source
+    param.i2cClk = UCS_getSMCLK();                                                                      // Get the SPI clock the same as SMCLK
+    param.dataRate = USCI_B_I2C_SET_DATA_RATE_400KBPS;                                                  // Set Data rate to 400KBS
 
-    //Set Transmit mode
-    USCI_B_I2C_setMode(USCI_B0_BASE,
-                       USCI_B_I2C_TRANSMIT_MODE
-    );
+    USCI_B_I2C_initMaster(USCI_B0_BASE, &param);                                                        // Init I2C based on the parameters provided
 
-    //Enable I2C Module to start operations
-    USCI_B_I2C_enable(USCI_B0_BASE);
+    USCI_B_I2C_setSlaveAddress(USCI_B0_BASE,SLAVE_ADDRESS);                                             // Set the I2C to communicate using slave address
+    USCI_B_I2C_setMode(USCI_B0_BASE,USCI_B_I2C_TRANSMIT_MODE);                                          // Set I2C to Transmit mode
+    USCI_B_I2C_enable(USCI_B0_BASE);                                                                    //Enable I2C Module to start operations
 }
 
 /*
@@ -261,33 +235,27 @@ void initI2C() {
  * The complete User Interface and reporting not defined Yet(Keyboard?)
  */
 void initButton() {
-    // Left button on the launch Pad
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P2, GPIO_PIN1);
-    GPIO_selectInterruptEdge(GPIO_PORT_P2, GPIO_PIN1,GPIO_HIGH_TO_LOW_TRANSITION);
-    GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN1);
-    GPIO_enableInterrupt(GPIO_PORT_P2, GPIO_PIN1);
 
-    // Right button on the launch pad
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN1);
-    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN1,GPIO_HIGH_TO_LOW_TRANSITION);
-    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN1);
-    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN1);
+    GPIO_selectInterruptEdge(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN,GPIO_HIGH_TO_LOW_TRANSITION);            // Set Interrupt edge from high to low
+    GPIO_clearInterrupt(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);                                             // Clear interrupt
+    GPIO_enableInterrupt(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);                                            // Enable interrupt
 
-
-
+    GPIO_selectInterruptEdge(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN,GPIO_HIGH_TO_LOW_TRANSITION);          // Set Interrupt edge from high to low
+    GPIO_clearInterrupt(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);                                           // Clear interrupt
+    GPIO_enableInterrupt(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);                                          // Enable interrupt
 }
 
-
+// ISR for the 2 buttons
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
     __no_operation();
-    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN1);
+    GPIO_clearInterrupt(RIGHT_BUTTON_PORT, RIGHT_BUTTON_PIN);
 }
 
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void)
 {
     __no_operation();
-    GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN1);
+    GPIO_clearInterrupt(LEFT_BUTTON_PORT, LEFT_BUTTON_PIN);
 }
