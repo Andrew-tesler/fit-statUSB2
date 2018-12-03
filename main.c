@@ -130,27 +130,30 @@ void main(void)
 
     // Init buttons
     SSD1306Init();                                                                              // Init Template LCD Driver TODO Change to some other related name
+//    ssd1306_display(logo);
     clearScreen();
-    int k;
-        for (k=0;k<30;k++)
-        {
-            Fill_RAM_PAGE(1, 0xff);
-            Fill_RAM_PAGE(3, 0xff);
-            Fill_RAM_PAGE(5, 0xff);
-            Fill_RAM_PAGE(7, 0xff);
 
-            __delay_cycles(1000);
-
-            clearScreen();
-
-            Fill_RAM_PAGE(2, 0xff);
-            Fill_RAM_PAGE(4, 0xff);
-            Fill_RAM_PAGE(6, 0xff);
-
-            clearScreen();
-
-            __delay_cycles(1000);
-        }
+    stringDraw(2, 30, "MSP430G2553");
+//    int k;
+//        for (k=0;k<30;k++)
+//        {
+//            Fill_RAM_PAGE(1, 0xff);
+//            Fill_RAM_PAGE(3, 0xff);
+//            Fill_RAM_PAGE(5, 0xff);
+//            Fill_RAM_PAGE(7, 0xff);
+//
+//            __delay_cycles(1000);
+//
+//            clearScreen();
+//
+//            Fill_RAM_PAGE(2, 0xff);
+//            Fill_RAM_PAGE(4, 0xff);
+//            Fill_RAM_PAGE(6, 0xff);
+//
+//            clearScreen();
+//
+//            __delay_cycles(1000);
+//        }
 
     stringDraw(2, 30, "MSP430G2553");
     //    initTimer();           // Prepare timer for LED toggling

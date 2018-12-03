@@ -133,6 +133,72 @@
 //    ssd1306_command(SSD1306_DEACTIVATE_SCROLL);             // 0x2E
 //
 //    ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel   0x2F
+//ssd1306_DriverInit(void)
+//{
+//    uint16_t vccstate = 0x00;
+//    // Init sequence
+//    ssd1306_command(SSD1306_DISPLAYOFF);                    // 0xAE
+//    ssd1306_command(SSD1306_SETDISPLAYCLOCKDIV);            // 0xD5
+//    ssd1306_command(0x80);                                  // the suggested ratio 0x80
+//
+//    ssd1306_command(SSD1306_SETMULTIPLEX);                  // 0xA8
+//    ssd1306_command(0x3F);                                  // SSD1306_LCDHEIGHT - 1
+//
+//    ssd1306_command(SSD1306_SETDISPLAYOFFSET);              // 0xD3
+//    ssd1306_command(0x00);                                   // no offset
+//    ssd1306_command(SSD1306_SETSTARTLINE);                   // line #0
+//    ssd1306_command(SSD1306_CHARGEPUMP);                    // 0x8D
+//    if (vccstate == SSD1306_EXTERNALVCC)
+//    { ssd1306_command(0x10); }
+//    else
+//    { ssd1306_command(0x14); }
+//    ssd1306_command(SSD1306_MEMORYMODE);                    // 0x20
+//    ssd1306_command(0x00);                                  // 0x0 act like ks0108
+//    ssd1306_command(0xA1);                                  // SSD1306_SEGREMAP | 0x1
+//    ssd1306_command(SSD1306_COMSCANDEC);                    // 0xC8
+//
+//#if defined SSD1306_128_32
+//    ssd1306_command(SSD1306_SETCOMPINS);                    // 0xDA
+//    ssd1306_command(0x02);
+//    ssd1306_command(SSD1306_SETCONTRAST);                   // 0x81
+//    ssd1306_command(0x8F);
+//
+//#elif defined SSD1306_128_64
+//    ssd1306_command(SSD1306_SETCOMPINS);                    // 0xDA
+//    ssd1306_command(0x12);
+//    ssd1306_command(SSD1306_SETCONTRAST);                   // 0x81
+//    if (vccstate == SSD1306_EXTERNALVCC)
+//    { ssd1306_command(0x9F); }
+//    else
+//    { ssd1306_command(0xCF); }
+//
+//#elif defined SSD1306_96_16
+//    ssd1306_command(SSD1306_SETCOMPINS);                    // 0xDA
+//    ssd1306_command(0x2);   //ada x12
+//    ssd1306_command(SSD1306_SETCONTRAST);                   // 0x81
+//    if (vccstate == SSD1306_EXTERNALVCC)
+//    { ssd1306_command(0x10); }
+//    else
+//    { ssd1306_command(0xAF); }
+//
+//#endif
+//
+//    ssd1306_command(SSD1306_SETPRECHARGE);                  // 0xd9
+//    if (vccstate == SSD1306_EXTERNALVCC)
+//    { ssd1306_command(0x22); }
+//    else
+//    { ssd1306_command(0xF1); }
+//    ssd1306_command(SSD1306_SETVCOMDETECT);                 // 0xDB
+//    ssd1306_command(0x40);
+//    ssd1306_command(SSD1306_DISPLAYALLON_RESUME);           // 0xA4
+//    ssd1306_command(SSD1306_NORMALDISPLAY);                 // 0xA6
+//
+//    ssd1306_command(SSD1306_DEACTIVATE_SCROLL);             // 0x2E
+//
+//    ssd1306_command(SSD1306_DISPLAYON);//--turn on oled panel   0x2F
+//
+//}
+
 char SSD1306_init[] = {
 
 
@@ -166,18 +232,18 @@ char SSD1306_init[] = {
 
 void SSD1306Init( void )
 {
-    OLED_DESELECT;
+//    OLED_DESELECT;
 
-    OLED_COMMAND;
+//    OLED_COMMAND;
 
-    OLED_RES_LOW;
+//    OLED_RES_LOW;
 
     // Delay for 200ms at 16Mhz
-    __delay_cycles(3200000);
+//    __delay_cycles(3200000);
 
-    OLED_RES_HIGH;
+//    OLED_RES_HIGH;
 
-    __delay_cycles(1600000);
+//    __delay_cycles(1600000);
 
     //TRIGGER;
 

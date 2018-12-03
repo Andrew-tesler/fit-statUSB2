@@ -152,6 +152,7 @@ void SSD1306PinSetup( void );
 void SSD1306Init( void );
 
 void SSD1306SendCommand( char *data, int i );
+
 void SSD1306SendData( char *data, int i );
 void setAddress( char page, char column );
 void clearScreen(void);
