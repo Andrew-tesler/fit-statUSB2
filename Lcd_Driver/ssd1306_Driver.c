@@ -211,7 +211,7 @@ char SSD1306_init[] = {
                        0x00,
                        SSD1306_SETSTARTLINE,
                        SSD1306_CHARGEPUMP,
-                       0x10,
+                       0x14,
                        SSD1306_MEMORYMODE,                   // 0x20
                        0x00,                                // 0x0 act like ks0108
                        0xA1,                                  // SSD1306_SEGREMAP | 0x1
@@ -219,7 +219,7 @@ char SSD1306_init[] = {
                        SSD1306_SETCOMPINS,                    // 0xDA
                        0x12,
                        SSD1306_SETCONTRAST,                   // 0x81
-                       0x9F,
+                       0xCF,
                        SSD1306_SETPRECHARGE,                 // 0xd9
                        0x22,
                        SSD1306_SETVCOMDETECT,                 // 0xDB

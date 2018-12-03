@@ -134,6 +134,8 @@ void main(void)
     clearScreen();
 
     stringDraw(2, 30, "MSP430G2553");
+
+    pixelDraw(10, 12);
 //    int k;
 //        for (k=0;k<30;k++)
 //        {
@@ -154,8 +156,8 @@ void main(void)
 //
 //            __delay_cycles(1000);
 //        }
-
-    stringDraw(2, 30, "MSP430G2553");
+//
+//    stringDraw(2, 30, "MSP430G2553");
     //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE);                                                                              // Init USB & events; if a host is present, connect
 
