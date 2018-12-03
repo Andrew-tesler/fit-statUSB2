@@ -263,15 +263,15 @@ void SSD1306SendCommand( char *data, int i )
 
     uint8_t control = 0x00;
 
-    USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
+
 
     while(i)
     {
 
-//        USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
+        USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
 
         USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
-
+        USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
 
 
         __delay_cycles(70);
@@ -282,7 +282,7 @@ void SSD1306SendCommand( char *data, int i )
         i--;                // decrement byte counter
     }
 
-    USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+
 
 
     __enable_interrupt();
@@ -298,17 +298,18 @@ void SSD1306SendData( char *data, int i )
     __disable_interrupt();
 
     uint8_t control = 0x00;
+    USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
 
     while(i)
     {
 
 
 
-        USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
+
 
         USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
 
-        USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+
 
         __delay_cycles(50);
 
@@ -318,6 +319,7 @@ void SSD1306SendData( char *data, int i )
         i--;                // decrement byte counter
 
     }
+    USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
 
 
     __enable_interrupt();
