@@ -130,16 +130,17 @@ void main(void)
 
     // Init buttons
     SSD1306Init();                                                                              // Init Template LCD Driver TODO Change to some other related name
+    Set_Display_On_Off(0);
     Set_Display_On_Off(1);
 //    ssd1306_display(logo);
     clearScreen();
 
 //    Set_Inverse_Display(1);
-    Set_Display_On_Off(0);
-    charDraw(2,2,'A');
 
-    stringDraw(2, 30, "MSP430G2553");
-    Set_Display_On_Off(1);
+//    charDraw(2,2,'A');
+
+    stringDraw(2, 30, "MSP");
+//    Set_Display_On_Off(1);
 
 
 

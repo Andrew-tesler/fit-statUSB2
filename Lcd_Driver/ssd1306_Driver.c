@@ -269,10 +269,8 @@ void SSD1306SendCommand( char *data, int i )
     {
 
         USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
-
         USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
         USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-
 
         __delay_cycles(70);
 
@@ -297,8 +295,8 @@ void SSD1306SendData( char *data, int i )
 {
     __disable_interrupt();
 
-    uint8_t control = 0x00;
-    USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
+//    uint8_t control = 0x00;
+    USCI_B_I2C_masterSendStart(USCI_B0_BASE);
 
     while(i)
     {
@@ -311,7 +309,7 @@ void SSD1306SendData( char *data, int i )
 
 
 
-        __delay_cycles(50);
+//        __delay_cycles(50);
 
         //
         data++;             // increment pointer
