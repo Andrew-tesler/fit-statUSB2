@@ -138,9 +138,13 @@ void main(void)
 //    ssd1306_display(logo);                                                                              // Print the logo to the LCD
 //    ssd1306_startscrollright(0x00,0xFF);                                                                // Start Scroll Command
 //    ssd1306_invertDisplay(1);
-
     ssd1306_Init(2);
     ssd1306_Clear();
+    ssd1306_Draw6x8Str(0, 0, "  0.96\" 128x64 OLED ", 0, 0);
+
+    ssd1306_SendCommand(SSD1306_DISPLAY_ON);
+//    ssd1306_Init(2);
+//    ssd1306_Clear();
 
 
     strncat(deviceSN,(char *)SERIAL_ptrB,10);                                                           // Read the SN stored in internal flash and store(writed by the ATP)

@@ -372,7 +372,7 @@ void ssd1306_DiagScroll(unsigned char dir_left, unsigned char rows_fixed,
 
 void ssd1306_Init(unsigned char bus_prescale)
 {
-  TI_USCI_I2C_setprescale(bus_prescale);
+//  TI_USCI_I2C_setprescale(bus_prescale);
   ssd1306_SendCommand(SSD1306_DISPLAY_OFF);
   ssd1306_SendCommand(SSD1306_SET_DISPLAY_CLOCK_DIV);
   ssd1306_SendCommand(0x80);  
@@ -382,7 +382,7 @@ void ssd1306_Init(unsigned char bus_prescale)
   ssd1306_SendCommand(0x00);
   ssd1306_SendCommand(SSD1306_SET_START_LINE | 0x00);
   ssd1306_SendCommand(SSD1306_SET_CHARGE_PUMP);
-  ssd1306_SendCommand(0x14);
+  ssd1306_SendCommand(0x10);
   ssd1306_SendCommand(SSD1306_MEMORY_ADDRESS_MODE);
   ssd1306_SendCommand(SSD1306_SET_LCOL_START_ADDRESS);
   ssd1306_SendCommand(SSD1306_SEGMENT_REMAP | 0x01);
@@ -390,14 +390,17 @@ void ssd1306_Init(unsigned char bus_prescale)
   ssd1306_SendCommand(SSD1306_SET_COM_PINS_CONFIG);
   ssd1306_SendCommand(0x12);
   ssd1306_SendCommand(SSD1306_SET_CONTRAST);
-  ssd1306_SendCommand(0xC8);
+  ssd1306_SendCommand(0xCF);
   ssd1306_SendCommand(SSD1306_SET_PRECHARGE_PERIOD);
   ssd1306_SendCommand(0xF1);
   ssd1306_SendCommand(SSD1306_SET_VCOM_DESELECT_LVL);
   ssd1306_SendCommand(0x40);
   ssd1306_SendCommand(SSD1306_ENTIRE_DISPLAY_RESUME);
   ssd1306_SendCommand(SSD1306_NORMAL_DISPLAY);
-  ssd1306_FillDisplay(0x00);
+//  ssd1306_FillDisplay(0x00);
   ssd1306_SendCommand(SSD1306_DISPLAY_ON);
+
+  ssd1306_SendCommand(SSD1306_ENTIRE_DISPLAY_RESUME);
+  ssd1306_SendCommand(SSD1306_ENTIRE_DISPLAY_ON);
 }
 
