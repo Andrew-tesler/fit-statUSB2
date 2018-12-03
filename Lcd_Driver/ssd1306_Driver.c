@@ -259,7 +259,7 @@ void SSD1306Init( void )
  */
 void SSD1306SendCommand( char *data, int i )
 {
-    __disable_interrupt();
+//    __disable_interrupt();
 
     uint8_t control = 0x00;
 
@@ -283,7 +283,7 @@ void SSD1306SendCommand( char *data, int i )
 
 
 
-    __enable_interrupt();
+//    __enable_interrupt();
 }
 
 /* Function    : SSD1306SendData( char c )
@@ -293,7 +293,7 @@ void SSD1306SendCommand( char *data, int i )
  */
 void SSD1306SendData( char *data, int i )
 {
-    __disable_interrupt();
+//    __disable_interrupt();
 
 //    uint8_t control = 0x00;
     USCI_B_I2C_masterSendStart(USCI_B0_BASE);
@@ -320,7 +320,7 @@ void SSD1306SendData( char *data, int i )
     USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
 
 
-    __enable_interrupt();
+//    __enable_interrupt();
 }
 
 /* Function     : setAddress(char page, char column)
