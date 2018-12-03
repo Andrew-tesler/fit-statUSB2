@@ -263,7 +263,16 @@ extern const Graphics_Display g_sTemplate_Driver;
 extern uint8_t Template_Memory[];
 
 
-void ssd1306_command(uint8_t);
+
+// New format
+
+
+void SSD1306_sendCommandSingle( char data );
+
+void SSD1306_sendCommand( char *data,int i );
+
+void SSD1306_sendData( char *data, int i );
+
 
 void ssd1306_drawPixel(int16_t, int16_t, uint16_t);
 
