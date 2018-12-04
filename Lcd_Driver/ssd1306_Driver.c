@@ -72,35 +72,262 @@
    as a read followed by a write can be used instead.*/
 uint8_t Template_Memory[(LCD_X_SIZE * LCD_Y_SIZE * BPP + 7) / 8];
 
-char SSD1306_init[] = {
-                       SSD1306_DISPLAYOFF,
-                       SSD1306_SETDISPLAYCLOCKDIV,
-                       0x80,
-                       SSD1306_SETMULTIPLEX,
-                       0x3F,
-                       SSD1306_SETDISPLAYOFFSET,
-                       0x00,
-                       SSD1306_SETSTARTLINE,
-                       SSD1306_CHARGEPUMP,
-                       0x14,
-                       SSD1306_MEMORYMODE,                   // 0x20
-                       0x00,                                // 0x0 act like ks0108
-                       0xA1,                                  // SSD1306_SEGREMAP | 0x1
-                       SSD1306_COMSCANDEC,
-                       SSD1306_SETCOMPINS,                    // 0xDA
-                       0x12,
-                       SSD1306_SETCONTRAST,                   // 0x81
-                       0xCF,
-                       SSD1306_SETPRECHARGE,                 // 0xd9
-                       0x22,
-                       SSD1306_SETVCOMDETECT,                 // 0xDB
-                       0x40,
-                       SSD1306_DISPLAYALLON_RESUME,           // 0xA4
-                       SSD1306_NORMALDISPLAY,                 // 0xA6
-                       SSD1306_DEACTIVATE_SCROLL,           // 0x2E
-                       0x2F
-};
+void
+ssd1306_DriverInit(void)
+{
+    uint16_t vccstate = 0x00;
+    // Init sequence
+    ssd1306_init_command(SSD1306_DISPLAYOFF);                    // 0xAE
+    ssd1306_init_command(SSD1306_SETDISPLAYCLOCKDIV);            // 0xD5
+    ssd1306_init_command(0x80);                                  // the suggested ratio 0x80
 
+    ssd1306_init_command(SSD1306_SETMULTIPLEX);                  // 0xA8
+    ssd1306_init_command(0x3F);                                  // SSD1306_LCDHEIGHT - 1
+
+    ssd1306_init_command(SSD1306_SETDISPLAYOFFSET);              // 0xD3
+    ssd1306_init_command(0x00);                                   // no offset
+    ssd1306_init_command(SSD1306_SETSTARTLINE);                   // line #0
+    ssd1306_init_command(SSD1306_CHARGEPUMP);                    // 0x8D
+    if (vccstate == SSD1306_EXTERNALVCC)
+    { ssd1306_init_command(0x10); }
+    else
+    { ssd1306_init_command(0x14); }
+    ssd1306_init_command(SSD1306_MEMORYMODE);                    // 0x20
+    ssd1306_init_command(0x00);                                  // 0x0 act like ks0108
+    ssd1306_init_command(0xA1);                                  // SSD1306_SEGREMAP | 0x1
+    ssd1306_init_command(SSD1306_COMSCANDEC);                    // 0xC8
+
+#if defined SSD1306_128_32
+    ssd1306_init_command(SSD1306_SETCOMPINS);                    // 0xDA
+    ssd1306_init_command(0x02);
+    ssd1306_init_command(SSD1306_SETCONTRAST);                   // 0x81
+    ssd1306_init_command(0x8F);
+
+#elif defined SSD1306_128_64
+    ssd1306_init_command(SSD1306_SETCOMPINS);                    // 0xDA
+    ssd1306_init_command(0x12);
+    ssd1306_init_command(SSD1306_SETCONTRAST);                   // 0x81
+    if (vccstate == SSD1306_EXTERNALVCC)
+    { ssd1306_init_command(0x9F); }
+    else
+    { ssd1306_init_command(0xCF); }
+
+#elif defined SSD1306_96_16
+    ssd1306_init_command(SSD1306_SETCOMPINS);                    // 0xDA
+    ssd1306_init_command(0x2);   //ada x12
+    ssd1306_init_command(SSD1306_SETCONTRAST);                   // 0x81
+    if (vccstate == SSD1306_EXTERNALVCC)
+    { ssd1306_init_command(0x10); }
+    else
+    { ssd1306_init_command(0xAF); }
+
+#endif
+
+    ssd1306_init_command(SSD1306_SETPRECHARGE);                  // 0xd9
+    if (vccstate == SSD1306_EXTERNALVCC)
+    { ssd1306_init_command(0x22); }
+    else
+    { ssd1306_init_command(0xF1); }
+    ssd1306_init_command(SSD1306_SETVCOMDETECT);                 // 0xDB
+    ssd1306_init_command(0x40);
+    ssd1306_init_command(SSD1306_DISPLAYALLON_RESUME);           // 0xA4
+    ssd1306_init_command(SSD1306_NORMALDISPLAY);                 // 0xA6
+
+    ssd1306_init_command(SSD1306_DEACTIVATE_SCROLL);             // 0x2E
+
+    ssd1306_init_command(SSD1306_DISPLAYON);//--turn on oled panel   0x2F
+
+}
+
+// Send command to the display
+// Command structure is : control signal(0x00), The command itself(c)
+// The issue command to SPI to stop transmission
+void ssd1306_init_command(uint8_t c) {
+
+    uint8_t control = 0x00;
+
+    USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
+
+    USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,c);
+
+    USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+
+    __delay_cycles(50);
+
+}
+
+
+void ssd1306_display(char *data) {
+
+    ssd1306_init_command(SSD1306_COLUMNADDR);
+    ssd1306_init_command(0x00);   // Column start address (0 = reset)
+    ssd1306_init_command(0x7F); // Column end address (127 = reset) SSD1306_LCDWIDTH-1
+
+    ssd1306_init_command(SSD1306_PAGEADDR); //0x22
+    ssd1306_init_command(0x00); // Page start address (0 = reset)
+#if SSD1306_LCDHEIGHT == 64
+    ssd1306_init_command(0x07); // Page end address
+#endif
+#if SSD1306_LCDHEIGHT == 32
+    ssd1306_init_command(3); // Page end address
+#endif
+#if SSD1306_LCDHEIGHT == 16
+    ssd1306_init_command(1); // Page end address
+#endif
+
+    uint16_t i;
+    uint8_t x;
+
+#ifdef TWBR
+    uint8_t twbrbackup = TWBR;
+    TWBR = 12; // upgrade to 400KHz!
+#endif
+
+    for (i=0; i<(SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT/8); i++) {
+        __delay_cycles(500);
+
+        USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,0x40);
+
+        //        WIRE_WRITE(0x40);
+        for (x=0; x<16; x++) {
+
+            //                        USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,0xAA);
+            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,data[i]);
+            i++;
+        }
+        i--;
+        USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+    }
+}
+
+
+void SSD1306SendCommand( char *data, int i )
+{
+    __disable_interrupt();
+
+    uint8_t control = 0x00;
+
+    while(i)
+    {
+
+        USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
+        USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
+        USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+
+        __delay_cycles(70);
+
+        //
+        data++;             // increment pointer
+        //
+        i--;                // decrement byte counter
+    }
+    __enable_interrupt();
+}
+
+
+/* Function    : SSD1306SendData( char c )
+ * Description : Sends data to the OLED display
+ * Input       : Data
+ * Output      : None
+ */
+void SSD1306SendData( char *data, int i )
+{
+    __disable_interrupt();
+
+    //    uint8_t control = 0x00;
+    USCI_B_I2C_masterSendStart(USCI_B0_BASE);
+
+    while(i)
+    {
+
+        USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
+        __delay_cycles(50);
+        data++;             // increment pointer
+        //
+        i--;                // decrement byte counter
+    }
+    USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+
+    __enable_interrupt();
+
+}
+//ssd1306_init_command(SSD1306_COLUMNADDR);
+//ssd1306_init_command(0x00);   // Column start address (0 = reset)
+//ssd1306_init_command(0x7F); // Column end address (127 = reset) SSD1306_LCDWIDTH-1
+//
+//ssd1306_init_command(SSD1306_PAGEADDR); //0x22
+//ssd1306_init_command(0x00); // Page start address (0 = reset)
+//#if SSD1306_LCDHEIGHT == 64
+//ssd1306_init_command(0x07); // Page end address
+//#endif
+//#if SSD1306_LCDHEIGHT == 32
+//ssd1306_init_command(3); // Page end address
+//#endif
+//#if SSD1306_LCDHEIGHT == 16
+//ssd1306_init_command(1); // Page end address
+//#endif
+
+/* Function     : setAddress(char page, char column)
+ * Description  : sets position of LCD RAM
+ * Input        : page (0-7), column (0-127)
+ * Output       : none
+ */
+void setAddress( char page, char column )
+{
+
+    char columnAddress[] = { SSD1306_COLUMNADDRESS, SSD1306_COLUMNADDRESS_MSB, SSD1306_COLUMNADDRESS_LSB };
+
+    char pageAddress[3] = {SSD1306_PAGE_START_ADDRESS};
+
+    if (page > SSD1306_MAXROWS)
+    {
+        page = SSD1306_MAXROWS;
+    }
+
+    if (column > SSD1306_LCDWIDTH)
+    {
+        column = SSD1306_LCDWIDTH;
+    }
+
+    //    pageAddress[0] = SSD1306_PAGE_START_ADDRESS | (SSD1306_MAXROWS - page);
+
+    pageAddress[0] = 0x22;
+    pageAddress[1] = 0x00;
+    pageAddress[2] = 0x07;
+
+    columnAddress[0] = SSD1306_COLUMNADDRESS;
+    columnAddress[1] = SSD1306_COLUMNADDRESS_MSB | column;
+    columnAddress[2] = SSD1306_COLUMNADDRESS_LSB;
+
+    //__no_operation();
+
+    SSD1306SendCommand(columnAddress, 3);
+    SSD1306SendCommand(pageAddress, 3);
+
+
+}
+
+/* Function     : clearScreen(void)
+ * Description  : wipes data in memory to 0x00
+ * Input        : none
+ * Output       : blank screen (0x00)
+ */
+void clearScreen(void)
+{
+    char ramData[] = {0x00};
+
+    char i,j;
+
+    for(i=0; i < 8 ;i++)
+    {
+        setAddress(i,0);
+
+        for(j=0; j < SSD1306_LCDWIDTH; j++)
+        {
+            SSD1306SendData(ramData, 1);
+        }
+    }
+}
 //
 ////*****************************************************************************
 ////
@@ -162,125 +389,125 @@ char SSD1306_init[] = {
 // This function initializes the LCD controller
 //
 // TemplateDisplayFix
-void ssd1306_DriverInit(void)
-{
-    SSD1306_sendCommand(SSD1306_init, sizeof SSD1306_init);
-
-}
-
-
-void SSD1306_sendCommandSingle(char data)
-{
-
-    USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,0x00);
-    USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,data);
-    USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-}
-
-
-/* Function    : SSD1306SendCommand( char *data, int i )
- * Description : Sends a command to the OLED display
- * Input       : Command pointer and number of bytes to transfer
- * Output      : None
- */
-void SSD1306_sendCommand( char *data,int i)
-{
-    {
-        __disable_interrupt();
-
-        uint8_t control = 0x00;
-
-
-
-        while(i)
-        {
-
-            USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
-            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
-            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-
-            __delay_cycles(100);
-
-            //
-            data++;             // increment pointer
-            //
-            i--;                // decrement byte counter
-        }
-        __enable_interrupt();
-    }
-}
-
-
-
-/* Function    : SSD1306SendData( char c )
- * Description : Sends data to the OLED display
- * Input       : Data
- * Output      : None
- */
-void SSD1306SendData( char *data, int i )
-{
-
-    __disable_interrupt();
-    USCI_B_I2C_masterSendStart(USCI_B0_BASE);
-    while(i)
-    {
-        USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
-        __delay_cycles(100);
-
-
-        data++;             // increment pointer
-
-        i--;                // decrement byte counter
-    }
-    // Send stop signal
-    USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-
-    //    __enable_interrupt();
-}
-
-
-void ssd1306_display(uint8_t array[]) {
-
-    SSD1306_sendCommandSingle(SSD1306_COLUMNADDR);
-    SSD1306_sendCommandSingle(0x00);   // Column start address (0 = reset)
-    SSD1306_sendCommandSingle(0x7F); // Column end address (127 = reset) SSD1306_LCDWIDTH-1
-
-    SSD1306_sendCommandSingle(SSD1306_PAGEADDR); //0x22
-    SSD1306_sendCommandSingle(0x00); // Page start address (0 = reset)
-#if SSD1306_LCDHEIGHT == 64
-    SSD1306_sendCommandSingle(0x07); // Page end address
-#endif
-#if SSD1306_LCDHEIGHT == 32
-    SSD1306_sendCommandSingle(3,1); // Page end address
-#endif
-#if SSD1306_LCDHEIGHT == 16
-    SSD1306_sendCommandSingle(1,1); // Page end address
-#endif
-
-    uint16_t i;
-    uint8_t x;
-
-#ifdef TWBR
-    uint8_t twbrbackup = TWBR;
-    TWBR = 12; // upgrade to 400KHz!
-#endif
-
-    for (i=0; i<(SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT/8); i++) {
-        __delay_cycles(500);
-
-        USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,0x40);
-
-        //        WIRE_WRITE(0x40);
-        for (x=0; x<16; x++) {
-
-            //                        USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,0xAA);
-            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,array[i]);
-            i++;
-        }
-        i--;
-        USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
-    }
-}
+//void ssd1306_DriverInit(void)
+//{
+//    SSD1306_sendCommand(SSD1306_init, sizeof SSD1306_init);
+//
+//}
+//
+//
+//void SSD1306_sendCommandSingle(char data)
+//{
+//
+//    USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,0x00);
+//    USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,data);
+//    USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+//}
+//
+//
+///* Function    : SSD1306SendCommand( char *data, int i )
+// * Description : Sends a command to the OLED display
+// * Input       : Command pointer and number of bytes to transfer
+// * Output      : None
+// */
+//void SSD1306_sendCommand( char *data,int i)
+//{
+//    {
+//        __disable_interrupt();
+//
+//        uint8_t control = 0x00;
+//
+//
+//
+//        while(i)
+//        {
+//
+//            USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,control);
+//            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
+//            USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+//
+//            __delay_cycles(100);
+//
+//            //
+//            data++;             // increment pointer
+//            //
+//            i--;                // decrement byte counter
+//        }
+//        __enable_interrupt();
+//    }
+//}
+//
+//
+//
+///* Function    : SSD1306SendData( char c )
+// * Description : Sends data to the OLED display
+// * Input       : Data
+// * Output      : None
+// */
+//void SSD1306SendData( char *data, int i )
+//{
+//
+//    __disable_interrupt();
+//    USCI_B_I2C_masterSendStart(USCI_B0_BASE);
+//    while(i)
+//    {
+//        USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
+//        __delay_cycles(100);
+//
+//
+//        data++;             // increment pointer
+//
+//        i--;                // decrement byte counter
+//    }
+//    // Send stop signal
+//    USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+//
+//    //    __enable_interrupt();
+//}
+//
+//
+//void ssd1306_display(uint8_t array[]) {
+//
+//    SSD1306_sendCommandSingle(SSD1306_COLUMNADDR);
+//    SSD1306_sendCommandSingle(0x00);   // Column start address (0 = reset)
+//    SSD1306_sendCommandSingle(0x7F); // Column end address (127 = reset) SSD1306_LCDWIDTH-1
+//
+//    SSD1306_sendCommandSingle(SSD1306_PAGEADDR); //0x22
+//    SSD1306_sendCommandSingle(0x00); // Page start address (0 = reset)
+//#if SSD1306_LCDHEIGHT == 64
+//    SSD1306_sendCommandSingle(0x07); // Page end address
+//#endif
+//#if SSD1306_LCDHEIGHT == 32
+//    SSD1306_sendCommandSingle(3,1); // Page end address
+//#endif
+//#if SSD1306_LCDHEIGHT == 16
+//    SSD1306_sendCommandSingle(1,1); // Page end address
+//#endif
+//
+//    uint16_t i;
+//    uint8_t x;
+//
+//#ifdef TWBR
+//    uint8_t twbrbackup = TWBR;
+//    TWBR = 12; // upgrade to 400KHz!
+//#endif
+//
+//    for (i=0; i<(SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT/8); i++) {
+//        __delay_cycles(500);
+//
+//        USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,0x40);
+//
+//        //        WIRE_WRITE(0x40);
+//        for (x=0; x<16; x++) {
+//
+//            //                        USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,0xAA);
+//            USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,array[i]);
+//            i++;
+//        }
+//        i--;
+//        USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
+//    }
+//}
 
 //void SSD1306SendCommand(uint8_t c) {
 //

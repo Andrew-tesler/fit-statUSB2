@@ -131,6 +131,13 @@ uint8_t buffer[1024];
 #define SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL 0x29
 #define SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL 0x2A
 
+#define SSD1306_COLUMNADDRESS 0x21
+#define SSD1306_COLUMNADDRESS_MSB 0x00
+#define SSD1306_COLUMNADDRESS_LSB 0x7F
+
+#define SSD1306_MAXROWS 7
+#define SSD1306_PAGE_START_ADDRESS 0xB0
+
 
 // Number of pixels on LCD X-axis
 // TemplateDisplayFix
@@ -266,17 +273,23 @@ extern uint8_t Template_Memory[];
 
 // New format
 
-
-void SSD1306_sendCommandSingle( char data );
+void ssd1306_init_command(uint8_t c);
+//void SSD1306_sendCommandSingle( char data );
 
 void SSD1306_sendCommand( char *data,int i );
 
 void SSD1306_sendData( char *data, int i );
 
+void clearScreen();
+
+void ssd1306_display(char *data);
+
+void setAddress( char page, char column );
+
 
 void ssd1306_drawPixel(int16_t, int16_t, uint16_t);
 
-void ssd1306_display(uint8_t[]);
+//void ssd1306_display(uint8_t[]);
 
 void ssd1306_clearDisplay();
 

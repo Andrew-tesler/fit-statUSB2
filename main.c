@@ -126,9 +126,14 @@ void main(void)
     USBHAL_initPorts();                                                                                 // Config GPIOS for low-power (output low)
     USBHAL_initClocks(12000000);                                                                        // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
     initI2C();                                                                                          // Init LCD i2c
-    initButton();                                                                                       // Init buttons
+    initButton();
+    // Init buttons
     ssd1306_DriverInit();
-    ssd1306_display(logo); // Init Template LCD Driver TODO Change to some other related name
+
+    clearScreen();
+
+    setAddress(0,0);
+    //ssd1306_display(logo); // Init Template LCD Driver TODO Change to some other related name
     //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE);                                                                              // Init USB & events; if a host is present, connect
 
