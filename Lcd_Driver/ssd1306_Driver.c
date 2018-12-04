@@ -214,7 +214,7 @@ void SSD1306SendCommand( char *data, int i )
         USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,*data);
         USCI_B_I2C_masterSendMultiByteStop(USCI_B0_BASE);
 
-        __delay_cycles(70);
+        __delay_cycles(50);
 
         //
         data++;             // increment pointer
@@ -610,28 +610,40 @@ void clearScreen(void)
 //    }
 //}
 //
-//void ssd1306_startscrollright(uint8_t start, uint8_t stop){
-//    SSD1306_sendCommand(SSD1306_RIGHT_HORIZONTAL_SCROLL,1);
-//    SSD1306_sendCommand(0X00,1);
-//    SSD1306_sendCommand(start,1);
-//    SSD1306_sendCommand(0X00,1);
-//    SSD1306_sendCommand(stop,1);
-//    SSD1306_sendCommand(0X00,1);
-//    SSD1306_sendCommand(0XFF,1);
-//    SSD1306_sendCommand(SSD1306_ACTIVATE_SCROLL,1);
-//  }
-//
-//
-//void ssd1306_startscrollleft(uint8_t start, uint8_t stop){
-//  SSD1306_sendCommand(SSD1306_LEFT_HORIZONTAL_SCROLL,1);
-//  SSD1306_sendCommand(0X00,1);
-//  SSD1306_sendCommand(start,1);
-//  SSD1306_sendCommand(0X00,1);
-//  SSD1306_sendCommand(stop,1);
-//  SSD1306_sendCommand(0X00,1);
-//  SSD1306_sendCommand(0XFF,1);
-//  SSD1306_sendCommand(SSD1306_ACTIVATE_SCROLL,1);
-//}
+void ssd1306_startscrollright(uint8_t start, uint8_t stop){
+    char SSD1306_startscrollright[] = {
+                                       SSD1306_RIGHT_HORIZONTAL_SCROLL,
+                                       0X00,
+                                       start,
+                                       0X00,
+                                       stop,
+                                       0X00,
+                                       0XFF,
+                                       SSD1306_ACTIVATE_SCROLL
+    };
+
+    SSD1306SendCommand(SSD1306_startscrollright, sizeof SSD1306_startscrollright);
+}
+
+
+void ssd1306_startscrollleft(uint8_t start, uint8_t stop){
+
+
+    char SSD1306_startscrollleft[] = {
+                                      SSD1306_LEFT_HORIZONTAL_SCROLL,
+                                      0X00,
+                                      start,
+                                      0X00,
+                                      stop,
+                                      0X00,
+                                      0XFF,
+                                      SSD1306_ACTIVATE_SCROLL
+
+    };
+
+    SSD1306SendCommand(SSD1306_startscrollleft, sizeof SSD1306_startscrollleft);
+
+}
 //
 //void ssd1306_stopscroll(void){
 //  SSD1306_sendCommand(SSD1306_DEACTIVATE_SCROLL,1);
