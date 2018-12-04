@@ -133,7 +133,8 @@ void main(void)
     clearScreen();
 
     setAddress(0,0);
-    //ssd1306_display(logo); // Init Template LCD Driver TODO Change to some other related name
+    ssd1306_display(logo); // Init Template LCD Driver TODO Change to some other related name
+
     //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE);                                                                              // Init USB & events; if a host is present, connect
 
