@@ -269,6 +269,10 @@ extern void ssd1306_DriverInit(void);
 extern const Graphics_Display g_sTemplate_Driver;
 extern uint8_t Template_Memory[];
 
+#define ssd1306_swap(a, b) \
+  (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b))) ///< No-temp-var swap operation
+
+#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
 
 
 // New format
@@ -282,12 +286,18 @@ void SSD1306_sendData( char *data, int i );
 
 void clearScreen();
 
-void ssd1306_display(char *data);
+void SSD1306_drawBitmap(int16_t x, int16_t y,
+           const uint8_t bitmap[], int16_t w, int16_t h, uint16_t color);
+
+void ssd1306_display(uint8_t *data);
 
 void setAddress( char page, char column );
 
+void SSD1306_drawHLine( int16_t x, int16_t y, int16_t w, uint16_t color);
 
-void ssd1306_drawPixel(int16_t, int16_t, uint16_t);
+void SSD1306_drawPixel(int16_t x, int16_t y, uint16_t color);
+
+//void ssd1306_drawPixel(int16_t, int16_t, uint16_t);
 
 //void ssd1306_display(uint8_t[]);
 

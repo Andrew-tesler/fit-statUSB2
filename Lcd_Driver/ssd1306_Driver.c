@@ -157,39 +157,41 @@ void ssd1306_init_command(uint8_t c) {
 }
 
 
-void ssd1306_display(char *data) {
+void ssd1306_display(uint8_t *data) {
 
-    ssd1306_init_command(SSD1306_COLUMNADDR);
-    ssd1306_init_command(0x00);   // Column start address (0 = reset)
-    ssd1306_init_command(0x7F); // Column end address (127 = reset) SSD1306_LCDWIDTH-1
+    setAddress(0x00,0x00);
 
-    ssd1306_init_command(SSD1306_PAGEADDR); //0x22
-    ssd1306_init_command(0x00); // Page start address (0 = reset)
-#if SSD1306_LCDHEIGHT == 64
-    ssd1306_init_command(0x07); // Page end address
-#endif
-#if SSD1306_LCDHEIGHT == 32
-    ssd1306_init_command(3); // Page end address
-#endif
-#if SSD1306_LCDHEIGHT == 16
-    ssd1306_init_command(1); // Page end address
-#endif
+//    ssd1306_init_command(SSD1306_COLUMNADDR);
+//    ssd1306_init_command(0x00);   // Column start address (0 = reset)
+//    ssd1306_init_command(0x7F); // Column end address (127 = reset) SSD1306_LCDWIDTH-1
+//
+//    ssd1306_init_command(SSD1306_PAGEADDR); //0x22
+//    ssd1306_init_command(0x00); // Page start address (0 = reset)
+//#if SSD1306_LCDHEIGHT == 64
+//    ssd1306_init_command(0x07); // Page end address
+//#endif
+//#if SSD1306_LCDHEIGHT == 32
+//    ssd1306_init_command(3); // Page end address
+//#endif
+//#if SSD1306_LCDHEIGHT == 16
+//    ssd1306_init_command(1); // Page end address
+//#endif
 
     uint16_t i;
     uint8_t x;
 
-#ifdef TWBR
-    uint8_t twbrbackup = TWBR;
-    TWBR = 12; // upgrade to 400KHz!
-#endif
+//#ifdef TWBR
+//    uint8_t twbrbackup = TWBR;
+//    TWBR = 12; // upgrade to 400KHz!
+//#endif
 
+//    USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,0x20);
     for (i=0; i<(SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT/8); i++) {
-        __delay_cycles(500);
-
+        __delay_cycles(50);
         USCI_B_I2C_masterSendMultiByteStart(USCI_B0_BASE,0x40);
 
         //        WIRE_WRITE(0x40);
-        for (x=0; x<16; x++) {
+        for (x=0; x<8; x++) {
 
             //                        USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,0xAA);
             USCI_B_I2C_masterSendMultiByteNext(USCI_B0_BASE,data[i]);
@@ -251,6 +253,81 @@ void SSD1306SendData( char *data, int i )
     __enable_interrupt();
 
 }
+
+/*
+ * x - Start X
+ * y - Start Y
+ * w - Lenght
+ * Color
+ */
+
+void SSD1306_drawHLine( int16_t x, int16_t y, int16_t w, uint16_t color) {
+
+  if((y >= 0) && (y < SSD1306_LCDHEIGHT)) { // Y coord in bounds?
+    if(x < 0) { // Clip left
+      w += x;
+      x  = 0;
+    }
+    if((x + w) > SSD1306_LCDWIDTH) { // Clip right
+      w = (SSD1306_LCDWIDTH - x);
+    }
+    if(w > 0) { // Proceed only if width is positive
+      uint8_t *pBuf = &buffer[(y / 8) * SSD1306_LCDWIDTH + x],
+               mask = 1 << (y & 7);
+      switch(color) {
+       case WHITE:               while(w--) { *pBuf++ |= mask; }; break;
+       case BLACK: mask = ~mask; while(w--) { *pBuf++ &= mask; }; break;
+       case INVERSE:             while(w--) { *pBuf++ ^= mask; }; break;
+      }
+    }
+  }
+}
+
+void SSD1306_drawPixel(int16_t x, int16_t y, uint16_t color) {
+
+  if((x >= 0) && (x < SSD1306_LCDWIDTH) && (y >= 0) && (y < SSD1306_LCDHEIGHT)) {
+    // Pixel is in-bounds. Rotate coordinates if needed.
+//    switch(getRotation()) {
+//     case 1:
+//      ssd1306_swap(x, y);
+//      x = SSD1306_LCDWIDTH - x - 1;
+//      break;
+//     case 2:
+//      x = SSD1306_LCDWIDTH  - x - 1;
+//      y = SSD1306_LCDHEIGHT - y - 1;
+//      break;
+//     case 3:
+//      ssd1306_swap(x, y);
+//      y = SSD1306_LCDHEIGHT - y - 1;
+//      break;
+    }
+    switch(color) {
+     case WHITE:   buffer[x + (y/8)*SSD1306_LCDWIDTH] |=  (1 << (y&7)); break;
+     case BLACK:   buffer[x + (y/8)*SSD1306_LCDWIDTH] &= ~(1 << (y&7)); break;
+     case INVERSE: buffer[x + (y/8)*SSD1306_LCDWIDTH] ^=  (1 << (y&7)); break;
+    }
+  }
+
+
+void SSD1306_drawBitmap(int16_t x, int16_t y,
+           const uint8_t bitmap[], int16_t w, int16_t h, uint16_t color) {
+
+    int16_t j,i;
+    int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
+    uint8_t byte = 0;
+
+   // startWrite();
+    for( j=0; j<h; j++, y++) {
+        for( i=0; i<w; i++) {
+            if(i & 7) byte <<= 1;
+            else      byte   = pgm_read_byte(&bitmap[j * byteWidth + i / 8]);
+            if(byte & 0x80) SSD1306_drawPixel(x+i, y, color);
+        }
+    }
+   // endWrite();
+}
+
+
 //ssd1306_init_command(SSD1306_COLUMNADDR);
 //ssd1306_init_command(0x00);   // Column start address (0 = reset)
 //ssd1306_init_command(0x7F); // Column end address (127 = reset) SSD1306_LCDWIDTH-1
@@ -277,7 +354,7 @@ void setAddress( char page, char column )
 
     char columnAddress[] = { SSD1306_COLUMNADDRESS, SSD1306_COLUMNADDRESS_MSB, SSD1306_COLUMNADDRESS_LSB };
 
-    char pageAddress[3] = {SSD1306_PAGE_START_ADDRESS};
+    char pageAddress[] = {SSD1306_PAGE_START_ADDRESS};
 
     if (page > SSD1306_MAXROWS)
     {
@@ -291,9 +368,8 @@ void setAddress( char page, char column )
 
     //    pageAddress[0] = SSD1306_PAGE_START_ADDRESS | (SSD1306_MAXROWS - page);
 
-    pageAddress[0] = 0x22;
-    pageAddress[1] = 0x00;
-    pageAddress[2] = 0x07;
+    pageAddress[0] = SSD1306_PAGE_START_ADDRESS;
+
 
     columnAddress[0] = SSD1306_COLUMNADDRESS;
     columnAddress[1] = SSD1306_COLUMNADDRESS_MSB | column;
@@ -302,7 +378,7 @@ void setAddress( char page, char column )
     //__no_operation();
 
     SSD1306SendCommand(columnAddress, 3);
-    SSD1306SendCommand(pageAddress, 3);
+    SSD1306SendCommand(pageAddress, 1);
 
 
 }
@@ -312,22 +388,59 @@ void setAddress( char page, char column )
  * Input        : none
  * Output       : blank screen (0x00)
  */
-void clearScreen(void)
-{
-    char ramData[] = {0x00};
+//void clearScreen(void)
+//{
+//    char ramData[] = {0x00};
+//
+//    char i,j;
+//
+//    for(i=0; i < 8 ;i++)
+//    {
+//        setAddress(i,0);
+//
+//        for(j=0; j < SSD1306_LCDWIDTH; j++)
+//        {
+//            SSD1306SendData(ramData, 1);
+//        }
+//    }
+//}
 
-    char i,j;
+//! \param lX is the X coordinate of the pixel.
+//! \param lY is the Y coordinate of the pixel.
+//! \param ulValue is the color of the pixel.
+//!
+//! This function sets the given pixel to a particular color.  The coordinates
+//! of the pixel checked
+//!
+//! \return None.
+//
+//*****************************************************************************
+void ssd1306_drawPixel(int16_t x, int16_t y, uint16_t color) {
+    if ((x < 0) || (x >= 128) || (y < 0) || (y >= 64))
+        return;
 
-    for(i=0; i < 8 ;i++)
+    x = 128 - x - 1;
+    y = 64 - y - 1;
+
+    // x is which column
+    switch (color)
     {
-        setAddress(i,0);
-
-        for(j=0; j < SSD1306_LCDWIDTH; j++)
-        {
-            SSD1306SendData(ramData, 1);
-        }
+    case WHITE:   buffer[x+ (y/8)*SSD1306_LCDWIDTH] |=  (1 << (y&7)); break;
+    case BLACK:   buffer[x+ (y/8)*SSD1306_LCDWIDTH] &= ~(1 << (y&7)); break;
+    case INVERSE: buffer[x+ (y/8)*SSD1306_LCDWIDTH] ^=  (1 << (y&7)); break;
     }
 }
+
+
+void ssd1306_clearDisplay() {
+    uint16_t i;
+
+    for (i=0; i<(SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT/8); i++) {
+
+        buffer[i] = 0x00;
+    }
+}
+
 //
 ////*****************************************************************************
 ////
@@ -626,6 +739,7 @@ void ssd1306_startscrollright(uint8_t start, uint8_t stop){
 }
 
 
+
 void ssd1306_startscrollleft(uint8_t start, uint8_t stop){
 
 
@@ -638,12 +752,13 @@ void ssd1306_startscrollleft(uint8_t start, uint8_t stop){
                                       0X00,
                                       0XFF,
                                       SSD1306_ACTIVATE_SCROLL
-
     };
 
     SSD1306SendCommand(SSD1306_startscrollleft, sizeof SSD1306_startscrollleft);
 
 }
+
+
 //
 //void ssd1306_stopscroll(void){
 //  SSD1306_sendCommand(SSD1306_DEACTIVATE_SCROLL,1);

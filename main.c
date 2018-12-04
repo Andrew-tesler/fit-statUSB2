@@ -40,13 +40,14 @@
 #include <Lcd_Driver/ssd1306_Driver.h>                                                                  // SSD1306 Driver Library file
 #include "images/images.h"                                                                              // Images file for LCD driver
 #include "grlib.h"                                                                                      // TI Graphics library
-
+//#include "images/TI_Logo_69x64.c"
 // USB Related
 #include "USB_config/descriptors.h"                                                                     // USB descriptors
 #include "USB_API/USB_Common/device.h"                                                                  // Part of TI USP API library
 #include "USB_API/USB_Common/usb.h"                                                                     // Part of TI USP API library
 #include "USB_API/USB_CDC_API/UsbCdc.h"                                                                 // Part of TI USP API library USB CDC
 #include "USB_app/usbConstructs.h"                                                                      // Part of TI USP API library
+#include "Lcd_Driver/util/font5x7.h"
 // LED related
 #include "usbLed.h"                                                                                     // Help functions for RGB LEDS
 
@@ -130,10 +131,31 @@ void main(void)
     // Init buttons
     ssd1306_DriverInit();
 
-    clearScreen();
+    //clearScreen();
 
     setAddress(0,0);
     ssd1306_display(logo); // Init Template LCD Driver TODO Change to some other related name
+    //ssd1306_startscrollright( 0x00,  0xff);
+//    ssd1306_cle();
+    ssd1306_clearDisplay();
+
+    SSD1306_drawHLine(0, 32, 128, 1);
+
+    SSD1306_drawPixel(10,10,1);
+    SSD1306_drawBitmap(20, 20, font5x7[20], 5, 7, 1);
+//   drawBitmap(, y, bitmap, w, h, color)
+    ssd1306_display(buffer);
+
+//    __delay_cycles(5000000);
+//    ssd1306_startscrollleft(0x00,0xff);
+//    __delay_cycles(5000000);
+//    ssd1306_clearDisplay();
+
+
+
+    ssd1306_display(buffer);
+
+
 
     //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE);                                                                              // Init USB & events; if a host is present, connect
