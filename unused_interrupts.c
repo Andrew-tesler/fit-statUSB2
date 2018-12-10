@@ -35,7 +35,7 @@
 //#pragma vector=USB_UBM_VECTOR
 #pragma vector=USCI_A0_VECTOR
 #pragma vector=USCI_A1_VECTOR
-//#pragma vector=USCI_B0_VECTOR
+#pragma vector=USCI_B0_VECTOR
 #pragma vector=USCI_B1_VECTOR
 #pragma vector=WDT_VECTOR
 __interrupt void UNUSED_HWI_ISR (void)
