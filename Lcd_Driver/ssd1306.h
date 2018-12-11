@@ -33,7 +33,7 @@ void ssd1306_display_init();
 #endif
 
 #define         SSD1306_FONT_WIDTH                  6
-#define         SSD1306_FONT_HEIGHT                 16
+#define         SSD1306_FONT_HEIGHT                 4
 
 #define         SSD1306_PIXELS_PER_PAGE             8
 
@@ -81,9 +81,9 @@ void ssd1306_display_init();
 #define         SSD1306_EXTERNALVCC                 0x1
 #define         SSD1306_SWITCHCAPVCC                0x2
 
-unsigned char *PTxData;                     // Pointer to TX data
-unsigned char TXByteCtr;                    // Holds packet size
-unsigned char i2c_tx_buffer[2];             // buffer for sending commands
+//unsigned char *PTxData;                     // Pointer to TX data
+//unsigned char TXByteCtr;                    // Holds packet size
+//unsigned char i2c_tx_buffer[2];             // buffer for sending commands
 unsigned char i2c_tx_packet[164];           //buffer for TX data
 uint8_t size;
 

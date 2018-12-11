@@ -141,13 +141,18 @@ void main(void)
     ssd1306_display_init();
 
     ssd1306_clear();
-    ssd1306_print_line(0, "    fit-statUSB2");
+    ssd1306_print_line(0, "abcd");
+    __delay_cycles(500000);
     ssd1306_print_line(1, "---------------------");
+    __delay_cycles(500000);
     ssd1306_print_line(3, "10/12/2018");
+    __delay_cycles(500000);
     ssd1306_print_line(4, "Rev_0.3");
+    __delay_cycles(500000);
     ssd1306_print_line(6, "Initial Text Display");
-    //    ssd1306_print_line(6,"!@#$%^&*()_+");
-    ssd1306_print_line(7,"**********************");
+    __delay_cycles(500000);
+//    //    ssd1306_print_line(6,"!@#$%^&*()_+");
+//    ssd1306_print_line(7,"**********************");
 
     //    ssd1306_print_char(4, 1, 'A');
     //   clearScreen();
@@ -199,9 +204,13 @@ void main(void)
 
     while (1)
     {
+
         uint8_t ReceiveError = 0, SendError = 0;
         //uint16_t count;
         //        uint8_t i;
+        //char dateTest = "fdfdf";
+        ssd1306_print_line(3, "Test");
+
 
         // Check the USB state and directly main loop accordingly
         switch (USB_getConnectionState())
@@ -218,7 +227,7 @@ void main(void)
 
 
                 // Enter LPM0 until awakened by an event handler
-                __bis_SR_register(LPM0_bits + GIE);
+//                __bis_SR_register(LPM0_bits + GIE);
             }
 
             __enable_interrupt();
