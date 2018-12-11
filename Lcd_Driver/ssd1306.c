@@ -1,14 +1,29 @@
-/*
- * ssd1306.c
+/**********************************************************
+ * NAME: ssd1306.c
  *
- *  Created on: Mar 19, 2018
- *      Author: Adam Prey
- */
+ * PURPOSE: driver for SSD1306 OLED monitor
+ *
+ *
+ * GLOBAL VARIABLES: *
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 10/12/2018   Andrew T.   0.1.0     File creation
+ *
+ * *
+ *******************************************************************/
 #include "ssd1306.h"
 #include "driverlib.h"
 #include <msp430.h>
 
-void ssd1306_display_init();
+
+
+
 
 static uint8_t ssd1306_command(uint8_t command){
 

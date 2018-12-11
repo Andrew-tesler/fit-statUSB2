@@ -1,13 +1,28 @@
-/*
- * ssd1306.h
+/**********************************************************
+ * NAME: ssd1306.h
  *
- * Created: 3/15/2018 3:01:20 PM
- *  Author: Adam Prey
- */
+ * PURPOSE: header for driver SSD1306 OLED monitor
+ *
+ *
+ * GLOBAL VARIABLES: *
+ * *
+ * Variable Type Description *
+ * -------- ---- ----------- *
+ * *
+ * DEVELOPMENT HISTORY: *
+ * *
+ * Date        Author       Release Description Of Change *
+ * ----        ------       ------- --------------------- *
+ * 10/12/2018   Andrew T.   0.1.0     File creation
+ *
+ * *
+ *******************************************************************/
 
 #include <msp430.h>
 #include <stdint.h>
 #include <string.h>
+
+void ssd1306_display_init();
 
 
 #define SSD1306_128_64
