@@ -30,6 +30,7 @@
 #include <msp430.h>                                                                                     // General board file
 #include <defines.c>                                                                                    // Project globals defines
 #include <initBoard.h>                                                                                  // TI Board specific functions
+#include <Lcd_Driver/ssd1306.h>                                                                  // SSD1306 Driver Library file
 #include <string.h>                                                                                     // String library to handle Strings
 #include <stdlib.h>                                                                                     // atoi
 #include "driverlib.h"                                                                                  // TI Driver library for MSP430 Devices
@@ -37,7 +38,6 @@
 #include <stdio.h>
 
 // LCD related
-#include <Lcd_Driver/ssd1306_Driver.h>                                                                  // SSD1306 Driver Library file
 #include "images/images.h"                                                                              // Images file for LCD driver
 #include "grlib.h"                                                                                      // TI Graphics library
 
@@ -81,7 +81,7 @@ Timer_A_initUpModeParam Timer_A_params = {0};     // TODO remove this
 //
 //*****************************************************************************************************
 
-uint8_t i;                                                                                              // General counter value
+//uint8_t i;                                                                                              // General counter value
 uint8_t incomingColor[6];                                                                               // Array for incoming color data
 uint8_t formatedColor[3];                                                                               // Formated array color data
 uint8_t unformatedFade[MAX_FADE_DECIMAL] = "";                                                          // Unformatted Fade tempt storage
@@ -127,13 +127,32 @@ void main(void)
     USBHAL_initClocks(12000000);                                                                        // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
     initI2C();                                                                                          // Init LCD i2c
     initButton();
+
+    //   SSD1306Init();
+    //   clearScreen();
     // Init buttons
-    ssd1306_DriverInit();
+    //ssd1306_DriverInit();
 
-    clearScreen();
+    // display demo text with outline
+    //     stringDraw(2, 30, "MSP430G2553");
+    //     stringDraw(4, 14, "USCI OLED BOOSTER");
+    //    stringDraw(6, 38, "43oh.com");
+    ssd1306_display_init();
 
-    setAddress(0,0);
-    ssd1306_display(logo); // Init Template LCD Driver TODO Change to some other related name
+    ssd1306_clear();
+    ssd1306_print_line(0, "    fit-statUSB2");
+    ssd1306_print_line(1, "---------------------");
+    ssd1306_print_line(3, "10/12/2018");
+    ssd1306_print_line(4, "Rev_0.3");
+    ssd1306_print_line(6, "Initial Text Display");
+    //    ssd1306_print_line(6,"!@#$%^&*()_+");
+    ssd1306_print_line(7,"**********************");
+
+    //    ssd1306_print_char(4, 1, 'A');
+    //   clearScreen();
+
+    //  setAddress(0,0);
+    //  ssd1306_display(logo); // Init Template LCD Driver TODO Change to some other related name
 
     //    initTimer();           // Prepare timer for LED toggling
     USB_setup(TRUE, TRUE);                                                                              // Init USB & events; if a host is present, connect
@@ -141,9 +160,9 @@ void main(void)
     __enable_interrupt();  // Enable interrupts globally
 
 
-                                                                                 // Print the logo to the LCD
-//    ssd1306_startscrollright(0x00,0xFF);                                                                // Start Scroll Command
-//    ssd1306_invertDisplay(1);
+    // Print the logo to the LCD
+    //    ssd1306_startscrollright(0x00,0xFF);                                                                // Start Scroll Command
+    //    ssd1306_invertDisplay(1);
 
     strncat(deviceSN,(char *)SERIAL_ptrB,10);                                                           // Read the SN stored in internal flash and store(writed by the ATP)
     strcat(deviceSN,"\r\n\r\n");
@@ -165,13 +184,13 @@ void main(void)
     __bis_SR_register( GIE );                                                                           // Enable interrupts globally
 
 
-//    __enable_interrupt();  // Enable interrupts globally
+    //    __enable_interrupt();  // Enable interrupts globally
 
     // Gather information from the card
     //strcpy(deviceSN,"Serial No:\t\t\t1234567890\n\r");
     //  strcpy(deviceSN,"Device SN: 56987\t Rev.1.0\r\n\r\n");
 
-//    allOff();
+    //    allOff();
     initTimers(0,10,10);
     currentRGBColor[2] = 5;
 
@@ -230,14 +249,21 @@ void main(void)
                     switch(wholeString[0]) {
                     // Enter device USB BSL mode for program updates.
                     case 'P' : {
+                        ssd1306_clear();
+                        ssd1306_print_line(0, "    fit-statUSB2");
+                        ssd1306_print_line(1, "---------------------");
+                        ssd1306_print_line(3, "   USB boot loader");
+                        ssd1306_print_line(5, "      Rev, 0.1");
+                        ssd1306_print_line(6, "    Reset board");
+                        ssd1306_print_line(7, "  after programming");
                         GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);
                         strcpy(outString,"\r\nEntering device Programming mode - Remove the device after programming\r\n\r\n");
                         // Send String here the USB will kill itself next
                         USBCDC_sendDataInBackground((uint8_t*)outString,
                                                     strlen(outString),CDC0_INTFNUM,0);
 
-//                        Timer_A_stop(TIMER_A0_BASE);
-//                        Timer_B_stop(TIMER_B0_BASE);
+                        //                        Timer_A_stop(TIMER_A0_BASE);
+                        //                        Timer_B_stop(TIMER_B0_BASE);
                         // Programming mode
                         USB_disconnect();                           // Disconnect USB device
                         __disable_interrupt();                      // Disable global interrupt
@@ -248,6 +274,7 @@ void main(void)
                     // Set color command in the format #RRGGBB
                     // Return Value OK
                     case '#' : {
+
                         Timer_A_stop(TIMER_A0_BASE);                                                    // Stop Timer A0
                         Timer_B_stop(TIMER_B0_BASE);                                                    // Stop Timer B0
                         GPIO_setAsPeripheralModuleFunctionOutputPin(LED_PORT,LED_R + LED_G + LED_B);    // Set alternative mode for GPIO LEDS
@@ -271,6 +298,12 @@ void main(void)
                         colorSeq[1][0] = formatedColor[0];
                         colorSeq[1][1] = formatedColor[1];
                         colorSeq[1][2] = formatedColor[2];
+
+                        ssd1306_clear();
+                        ssd1306_print_line(0, "    fit-statUSB2");
+                        ssd1306_print_line(1, "---------------------");
+                        ssd1306_print_line(3, "  Set color seq #");
+                        ssd1306_print_line(5,formatedColor[0]);
                         // Convert the unformatted data in temp array to formated decimals
                         colorFadeTimer[0] = 10;                                                         // To simulate instant transition
 
@@ -290,16 +323,20 @@ void main(void)
                     // return fit-statUSB ID serial number as generated by USB API
                     case '?' : {
                         strcpy(outString,"\r");                                                       // Send new Line after serial number
-//                        ssd1306_startscrollleft(0x00,0xFF);
+                        //                        ssd1306_startscrollleft(0x00,0xFF);
                         USBCDC_sendDataInBackground((uint8_t*)outString,
                                                     strlen(outString),CDC0_INTFNUM,0);
 
 
-//                        USBCDC_sendDataInBackground((uint8_t*)abramSerialStringDescriptor,              // Send Serial information
-//                                                    34,CDC0_INTFNUM,0);
+                        //                        USBCDC_sendDataInBackground((uint8_t*)abramSerialStringDescriptor,              // Send Serial information
+                        //                                                    34,CDC0_INTFNUM,0);
                         strcpy(outString,"\r\n");                                                       // Send new Line after serial number
                         USBCDC_sendDataInBackground((uint8_t*)outString,
                                                     strlen(outString),CDC0_INTFNUM,0);
+                        ssd1306_clear();
+                        ssd1306_print_line(1, "    HELP???");
+                        ssd1306_print_line(2, "-----------------");
+
                         break;
                     }
 
@@ -351,13 +388,13 @@ void main(void)
                                         break;
                                     }
                                     incomingColor[n] = wholeString[wholeStringCounter+1+n];                                         // The first string is the switch case command
-//                                    wholeString[wholeStringCounter+1+n] = 0x00;                                                     // Remove old data
+                                    //                                    wholeString[wholeStringCounter+1+n] = 0x00;                                                     // Remove old data
                                 }
                                 converIncomingColor();
 
                                 for (n = 0 ; n < 3 ; n++) {                                                                         // Copy converted sequence to 2D array
                                     colorSeq[seqCounter][n] = formatedColor[n];
-//                                    formatedColor[n] = 0;                                                                           // Remove old data
+                                    //                                    formatedColor[n] = 0;                                                                           // Remove old data
                                 }
                                 if (seqCounter < MAX_SEQ_COLORS) {                                                                  // Check if not reached max colors
                                     seqCounter++;                                                                                   // Update sequence counter
@@ -369,7 +406,7 @@ void main(void)
                                 for (n=0;n<MAX_FADE_DECIMAL;n++) {                                                                  // parse incoming text and store only the fade numbers
                                     if (wholeString[wholeStringCounter+1+n] >= '0'  & wholeString[wholeStringCounter+1+n] <= '9' ) {
                                         unformatedFade[n] = wholeString[wholeStringCounter+1+n];                                    // Store the date after validating that this is ok
-//                                        wholeString[wholeStringCounter+1+n] = 0x00;                                                 // Remove old data
+                                        //                                        wholeString[wholeStringCounter+1+n] = 0x00;                                                 // Remove old data
                                         counterFade++;
                                     }
                                     else {
@@ -471,13 +508,21 @@ void main(void)
 
 
     //END USB
-//    __delay_cycles(50);
-//    __bis_SR_register(LPM0_bits + GIE);
-//    __no_operation();
+    //    __delay_cycles(50);
+    //    __bis_SR_register(LPM0_bits + GIE);
+    //    __no_operation();
 
 }
 
 void printHelp() {
+
+    ssd1306_clear();
+    ssd1306_print_line(0, "    fit-statUSB2");
+    ssd1306_print_line(1, "---------------------");
+    ssd1306_print_line(3, "P - update Mode");
+    ssd1306_print_line(5, "#RRGGBB - Set LED");
+    ssd1306_print_line(6, "F - Fade transition");
+
 
     // Prepare the first line of print
     strcpy(outString,"*******************************************************\n\n\r");
