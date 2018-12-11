@@ -16,6 +16,7 @@
  * ----        ------       ------- --------------------- *
  * 26/08/2018   Andrew T.   0.2.0     initial Release
  * 25/11/2018   Andrew T.   0.2.1     Added fitStatUSB Code
+ * 10/12/2018   Andrew T.   0.3.0     Added LCD string print
  *
  * *
  *******************************************************************/
@@ -303,7 +304,7 @@ void main(void)
                         ssd1306_print_line(0, "    fit-statUSB2");
                         ssd1306_print_line(1, "---------------------");
                         ssd1306_print_line(3, "  Set color seq #");
-                        ssd1306_print_line(5,formatedColor[0]);
+                        //ssd1306_print_line(5,formatedColor[0]);
                         // Convert the unformatted data in temp array to formated decimals
                         colorFadeTimer[0] = 10;                                                         // To simulate instant transition
 
