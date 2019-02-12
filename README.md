@@ -4,7 +4,7 @@ Project Under development collection of concept and proof of concept for fit-sta
 [![GitHub version](https://img.shields.io/github/release-pre/Andrew-tesler/fit-statUSB2.svg?style=flat)](https://github.com/Andrew-tesler/fit-statUSB2/releases/latest)
 [![GitHub download](https://img.shields.io/github/downloads-pre/Andrew-tesler/fit-statUSB2/latest/total.svg?style=flat)](https://github.com/Andrew-tesler/fit-statUSB2/releases/latest)
 [![GitHub issues](https://img.shields.io/github/issues-raw/Andrew-tesler/fit-statUSB2.svg?style=flat)](https://github.com/Andrew-tesler/fit-statUSB2/issues)
-[![GitHub last commit](https://img.shields.io/github/last-commit/Andrew-tesler/fit-statUSB2.svg?style=flat)]
+[!GitHub last commit](https://img.shields.io/github/last-commit/Andrew-tesler/fit-statUSB2.svg?style=flat)
 
 
 Short description
