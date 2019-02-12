@@ -1,5 +1,11 @@
 Project Under development collection of concept and proof of concept for fit-statUSB2 project
 
+[![GitHub version](https://img.shields.io/github/release/blynkkk/blynk-server.svg)](https://github.com/blynkkk/blynk-server/releases/latest)
+[![GitHub download](https://img.shields.io/github/downloads/blynkkk/blynk-server/total.svg)](https://github.com/blynkkk/blynk-server/releases/latest)
+[ ![Build Status](https://travis-ci.org/blynkkk/blynk-server.svg?branch=master)](https://travis-ci.org/blynkkk/blynk-server)
+
+
+
 Short description
 
 USB connected diplay with Leds and 2 buttons. Will show messages sent by the user and display LEDs RGB
