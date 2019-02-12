@@ -1,6 +1,6 @@
 Project Under development collection of concept and proof of concept for fit-statUSB2 project
 
-https://img.shields.io/github/manifest-json/v/Andrew-tesler/fit-statUSB2.svg?style=flat
+[![GitHub version](https://img.shields.io/github/manifest-json/v/Andrew-tesler/fit-statUSB2.svg?style=flat)]
 
 [![GitHub version](https://img.shields.io/github/release/blynkkk/blynk-server.svg)](https://github.com/Andrew-tesler/fit-statUSB2/releases/latest)
 [![GitHub download](https://img.shields.io/github/downloads/blynkkk/blynk-server/total.svg)](https://github.com/blynkkk/blynk-server/releases/latest)
